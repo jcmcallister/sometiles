@@ -1,0 +1,22 @@
+***** ///// ***** CLIENT SIDE  ///// ***** /////
+
+	main()
+
+		create Board
+			constructor creates the set of Tiles
+
+		Board is displayed	
+
+		create Pieces(playerID)
+			constructor attaches Pieces to Tiles
+		
+		assign Pieces to Tiles
+
+		display Pieces
+
+
+
+
+----------------- SERVER SIDE --------------------
+	init()
+		TODO: this 
