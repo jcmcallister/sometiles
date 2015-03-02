@@ -1,6 +1,10 @@
 			//Proof of Concept Reqs: 	A displayed Board <- Tiles, Player able to move 1 Piece across the Board
 			//Next steps: 				Multiple pieces, tile feature triggers, 2 players hotseat, Rules
 
+
+			//TODO ASAP: clean this spaghetti up with some Prototypal Inheritance of my Objects!!!
+
+
 			//Board is made up of Tiles
 			//Game Pieces occupy Tiles, based on moves from the Player
 			//In this sketch, Main() will test the Player moving GamePieces onto Tiles
@@ -14,20 +18,6 @@
 				//create Board (constructor makes Tile set)
 				//display Board
 					var myboard = new Board(3,3,100,100,"drawhere");
-
-				//Player
-					function Player(num){
-						this.number = num;
-						this.Pieces = [];
-						//this.PieceImage = '';
-						this.PieceShape = "circle"; //set of shapes (circle, triangle)
-						this.PieceColor = "green";//color set: [green, blue, red, custom]
-
-					}
-
-					Player.prototype.getPieces = function(){
-
-					}
 
 					var p1 = new Player(0);
 					
@@ -45,6 +35,18 @@
 				//display Pieces
 					p1.Pieces[0].drawPiece();
 			}
+
+			//START -- Player Functions
+				//Player
+					function Player(num){
+						this.number = num;
+						this.Pieces = [];
+						//this.PieceImage = '';
+						this.PieceShape = "circle"; //set of shapes: (circle, triangle)
+						this.PieceColor = "#0b0";//hex or rgba for canvas contexts
+
+					}
+			// END  -- Player Functions
 
 
 			//START -- PIECE Functions
