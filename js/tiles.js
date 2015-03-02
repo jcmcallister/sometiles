@@ -10,14 +10,14 @@
 			//In this sketch, Main() will test the Player moving GamePieces onto Tiles
 			//var canvasID = "drawhere";
 
-			var SomeTiles = { Boards: [], canvasID: "drawhere" };
+			var SomeTiles = { Boards: [], canvasID: "drawhere", Players: [] };
 
 			//our MAIN()
 			function onceLoaded(){
 
 				//create Board (constructor makes Tile set)
 				//display Board
-					var myboard = new Board(3,3,100,100,"drawhere");
+					var myboard = new Board(7,7,50,50,"drawhere");
 
 					var p1 = new Player(0);
 					
@@ -25,15 +25,89 @@
 				//create Pieces(playerID?)
 				//attach Pieces to Tiles
 				//assign Pieces to Tiles
-					p1.Pieces.push(new Piece(1,0));
+					p1.Pieces.push(new Piece(1,20));
 
 				//check for info 
 					//TODO: clean this up, it's damn near spaghetti!
 					p1.Pieces[0].getTileInfo();
 
-
 				//display Pieces
 					p1.Pieces[0].drawPiece();
+
+				//add Mouse listener
+					var canvas = document.getElementById(SomeTiles.canvasID) || document.getElementsByTagName("canvas")[0];
+					canvas.addEventListener("click", canvasClick, false);
+			}
+
+			function canvasClick(e){
+				//get cursor position
+				var x, y, thePiece, b=getBoard();
+				if(e.pageX  != undefined && e.pageY != undefined){
+					x = e.pageX;
+					y = e.pageY;
+				}else{
+					x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+					y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+				}
+				x -= e.target.offsetLeft;
+				y -= e.target.offsetTop;
+
+				x = Math.min(x, b.numTilesX*b.tileWidth);
+				y = Math.min(y, b.numTilesY*b.tileHeight);
+
+				console.log('clicked at [' + x + ', ' + y + ']' );
+
+				//find the Tile // Piece related to the 
+					//using the Math involved in Tile creation, we get an easy rect
+				var theTile = getTileFromXY(x,y), thePiece = getPiece(theTile.id), p;
+				
+				//if(!thePiece){
+					//piece not found?
+					console.log("no piece on Tile id:" + theTile.id);
+				//}else{
+					//TODO: FIX THIS ONCE PLAYER CODE IN PLACE
+					var player = SomeTiles.Players[0];
+					//select or move the piece in the clicked position!
+
+					if(thePiece && !player.selectedPiece){
+						//select
+						player.selectPiece(thePiece);
+					}else{
+						if(player.selectedPiece){
+							//move
+							player.movePiece(player.selectedPiece,theTile);
+						}
+					}
+
+				//}
+			}
+
+			function getPiece(tid){
+				//select the Piece from all Players & their sets of Pieces
+				var players = SomeTiles.Players, p;
+				for(var pidx =0; pidx < players.length; pidx++){
+					for(var i = 0; i< players[pidx].Pieces.length;i++){
+						p = players[pidx].Pieces[i];
+						if(p.hasOwnProperty("tileID") && p.tileID == tid){
+							return p;
+						}
+					}
+				}
+				return;
+			}
+
+			function getTileFromXY(x,y){
+				var b = getBoard(), t;
+
+				for(var i=0;i< b.tileSet.length;i++){
+					t = b.tileSet[i];
+					if(t.hasOwnProperty("x") && t.hasOwnProperty("y") && 
+						x >= t.x && x < (t.x + b.tileWidth) && y >= t.y && y < (t.y + b.tileHeight) ){
+						//we got it! don't reset Tile t now
+						break;
+					}
+				}
+				return t; //just in case its still null or undef
 			}
 
 			//START -- Player Functions
@@ -45,7 +119,40 @@
 						this.PieceShape = "circle"; //set of shapes: (circle, triangle)
 						this.PieceColor = "#0b0";//hex or rgba for canvas contexts
 
+						this.selectedPiece;//normally a piece ID
+
+						SomeTiles.Players.push(this);
 					}
+
+					Player.prototype.selectPiece = function(p){
+						this.selectedPiece = p;
+						p.drawPiece(true);//redraw in same position
+					}
+
+					Player.prototype.deselectPiece = function(p){
+						this.selectedPiece = undefined;
+						//p.drawPiece(true);//redraw in same position
+					}
+
+					Player.prototype.movePiece = function(p,destTile){
+						//move the given Piece p to the given destination Tile 
+
+						//step 1: change tile ID of p to destTile
+						p.tileID = destTile.id;
+
+						//deselect piece
+						this.selectedPiece = undefined;
+
+						//step 1.5 : redraw the Board
+						getBoard().drawBoard(SomeTiles.canvasID);
+
+						//step 2: redraw pieces
+						//TODO: other pieces
+
+						//step 2.5 redraw the moved piece!
+						p.drawPiece(false);//redraw in same position
+					}
+
 			// END  -- Player Functions
 
 
@@ -68,11 +175,15 @@
 				}
 
 				Piece.prototype.drawPiece = function(selected){
-					var info = this.getTileInfo(),
-					 canvas = document.getElementById(SomeTiles.canvasID) || document.getElementsByTagName("canvas")[0],
+					var info = this.getTileInfo();
+
+					if(!info){ console.warn("Tile info not found for Piece " + this.id); return; }
+					var canvas = document.getElementById(SomeTiles.canvasID) || document.getElementsByTagName("canvas")[0],
 					 radius = Math.min(getBoard().tileWidth, getBoard().tileHeight) * 0.45,
 					 centerX = info.x + (getBoard().tileWidth/2),
-					 centerY = info.y + (getBoard().tileHeight/2);
+					 centerY = info.y + (getBoard().tileHeight/2),
+					 selColor = "rgba(221,221,221,0.65)",
+					 color = "rgb(221,221,221)";
 
 					if(canvas && canvas.getContext){
 						var ctx = canvas.getContext("2d");
@@ -84,7 +195,12 @@
 					    if (selected) {
 							ctx.fillStyle = "#000";
 							ctx.fill();
+						}else{
+							ctx.fillStyle = "#ddd";
+							ctx.fill();
 						}
+
+
 					}
 					
 				}
@@ -115,6 +231,7 @@
 				}
 
 				Tile.prototype.setPiece = function(player_id){
+					//TODO: cleanup
 					this.hasPiece = true;
 					this.numPieces++;
 					this.pieceInfo = {player: player_id};
@@ -201,7 +318,7 @@
 					var canvas = document.getElementById(canvasID) || document.getElementsByTagName("canvas")[0],
 						color = color || "#a00",
 						offcolor = offcolor || "#222",
-						hasColors = false && color && offcolor;
+						hasColors = color && offcolor;
 
 					if(canvas && canvas.getContext){
 						//fix the canvas bounds to fit the tiles before getting context!
@@ -237,14 +354,27 @@
 
 						//color the squares
 							if(hasColors){
-								var drawCount = 1;
-								for (t in this.tileSet){
-									var myobj = this.tileSet[t];
-									drawCount++;
-									ctx.fillStyle = (drawCount % 2 == 1) ? color : offcolor;
-									ctx.fillRect (myobj.x,myobj.y,this.tileWidth,this.tileHeight);
+								var drawCount = 1, stagger = false;
+								for(var i=0; i<this.tileSet.length;i++,drawCount++){
+									
+									var tile = this.tileSet[i];
+
+									ctx.fillStyle = stagger ? color : offcolor;
+									stagger = !stagger;
+									//ctx.fillStyle = (drawCount % 2 == 1 || stagger) ? color : offcolor;
+
+									if(drawCount == this.numTilesY && this.numTilesY % 2 == 0){ 
+										drawCount = 0;
+										stagger = !stagger; 
+									}
+
+									ctx.fillRect(tile.x,tile.y,this.tileWidth,this.tileHeight);
 								}
-								
+								/*for (t in this.tileSet){
+									var myobj = 
+									drawCount++;
+									
+								}*/
 							}
 
 						/*ctx.fillStyle = "#bb0000";
