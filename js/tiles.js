@@ -10,7 +10,26 @@
 			//In this sketch, Main() will test the Player moving GamePieces onto Tiles
 			//var canvasID = "drawhere";
 
-			var SomeTiles = { Boards: [], canvasID: "drawhere", Players: [] };
+			//a Game is a set of rules, Objects describing those rules, a RuleChecker, and an otherPlayer Object
+			function Game(ServerResponse){
+				//args: the AJAX response from server
+
+				//ServerResponse will be parsed into these things
+
+				//TODO: polish this idea up
+				this.rules = [],
+				this.ruleObjs =[],
+				this.ruleChecker = null,
+				this.otherPlayer = null
+			};
+
+			var SomeTiles = { 
+				Boards: [],
+				canvasID: "drawhere",
+				Players: [],
+				debug: true
+				//,Game: theGame //TODO: add this once Game is done coming back from server
+				};
 
 			//our MAIN()
 			function onceLoaded(){
@@ -60,26 +79,40 @@
 				//find the Tile // Piece related to the 
 					//using the Math involved in Tile creation, we get an easy rect
 				var theTile = getTileFromXY(x,y), thePiece = getPiece(theTile.id), p;
-				
-				//if(!thePiece){
+				var player = SomeTiles.Players[0];
+				var movestr = "NO piece on Tile id = " + theTile.id;
+
+				if(thePiece === undefined && player.selectedPiece === undefined){
 					//piece not found?
-					console.log("no piece on Tile id:" + theTile.id);
-				//}else{
+					if(SomeTiles.debug){
+						console.log(movestr);
+					}
+					return;
+				}
+
 					//TODO: FIX THIS ONCE PLAYER CODE IN PLACE
-					var player = SomeTiles.Players[0];
+					
 					//select or move the piece in the clicked position!
 
 					if(thePiece && !player.selectedPiece){
 						//select
 						player.selectPiece(thePiece);
+						movestr = "selecting piece on Tile id:" + theTile.id;
 					}else{
 						if(player.selectedPiece){
-							//move
-							player.movePiece(player.selectedPiece,theTile);
+							if(player.selectedPiece.tileID != theTile.id){
+								//move
+								movestr = "moving piece from Tile id:" + player.selectedPiece.tileID + "\tto Tile id: " + theTile.id;
+								player.movePiece(player.selectedPiece,theTile);
+							}else{ movestr = "can't move from Tile to same Tile!"; }
 						}
 					}
 
-				//}
+					if(SomeTiles.debug){
+						console.log(movestr);
+					}
+
+				
 			}
 
 			function getPiece(tid){
@@ -177,7 +210,7 @@
 				Piece.prototype.drawPiece = function(selected){
 					var info = this.getTileInfo();
 
-					if(!info){ console.warn("Tile info not found for Piece " + this.id); return; }
+					if(!info && SomeTiles.debug){ console.warn("Tile info not found for Piece " + this.id); return; }
 					var canvas = document.getElementById(SomeTiles.canvasID) || document.getElementsByTagName("canvas")[0],
 					 radius = Math.min(getBoard().tileWidth, getBoard().tileHeight) * 0.45,
 					 centerX = info.x + (getBoard().tileWidth/2),
@@ -190,10 +223,10 @@
 						ctx.beginPath();
 					    ctx.arc(centerX, centerY, radius, 0, Math.PI*2, false);
 					    ctx.closePath();
-					    ctx.strokeStyle = "#000";
+					    ctx.strokeStyle = "#777";
 					    ctx.stroke();
 					    if (selected) {
-							ctx.fillStyle = "#000";
+							ctx.fillStyle = "#777";
 							ctx.fill();
 						}else{
 							ctx.fillStyle = "#ddd";
@@ -386,6 +419,10 @@
 					}else{
 						//canvas not supported! D:
 					}
+
+					//alter the CSS width of container
+					$("#container").css("width",this.tileWidth * this.numTilesX);
+
 				}//end drawBoard fn
 
 			// END  -- Board Functions
