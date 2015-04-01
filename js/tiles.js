@@ -46,12 +46,18 @@
 				//assign Pieces to Tiles
 					p1.Pieces.push(new Piece(1,20));
 
+				//make set of Pieces for given player
+					p1.addPiece(1,10,"circle");
+
 				//check for info 
 					//TODO: clean this up, it's damn near spaghetti!
 					p1.Pieces[0].getTileInfo();
 
 				//display Pieces
-					p1.Pieces[0].drawPiece();
+					//p1.Pieces[0].drawPiece();
+
+				//draw ALL pieces
+					p1.drawPieces();
 
 				//add Mouse listener
 					var canvas = document.getElementById(SomeTiles.canvasID) || document.getElementsByTagName("canvas")[0];
@@ -154,6 +160,7 @@
 
 						this.selectedPiece;//normally a piece ID
 
+
 						SomeTiles.Players.push(this);
 					}
 
@@ -180,20 +187,46 @@
 						getBoard().drawBoard(SomeTiles.canvasID);
 
 						//step 2: redraw pieces
-						//TODO: other pieces
+							this.drawPieces();
 
 						//step 2.5 redraw the moved piece!
-						p.drawPiece(false);//redraw in same position
+							p.drawPiece(false);//redraw in same position
+					}
+
+					Player.prototype.addPiece = function(pieceID, tileID, pieceType){
+						var newPiece = new Piece(pieceID, tileID, pieceType);
+						this.Pieces.push(newPiece);
+					}
+
+					Player.prototype.drawPieces = function(){
+						for(var i=0;i<this.Pieces.length;i++){
+							this.Pieces[i].drawPiece();
+						}
 					}
 
 			// END  -- Player Functions
 
+			//START -- Piece Types
+
+				//define movement, actions, shape, etc for this piece type
+
+			// END  -- Piece Types
+
 
 			//START -- PIECE Functions
-				function Piece(id, tileID){
+				function Piece(id, tileID, type){
 					this.id = id;
 					this.tileID = tileID;//which tile it is attached to! Piece is on Tile <i>
 					this.selected = false;
+
+					//type determines this Piece's shape, behaviors like movement/weapon actions/etc
+					//TODO: put DB backend to this
+					if(type == 'circle'){
+						this.type = type;
+					}else{
+						this.type = 'square';
+					}
+
 					//this.behaviors?
 					//this.actions
 					//this.moveset
@@ -237,6 +270,7 @@
 					}
 					
 				}
+
 
 				/*function getPieces(tileIndex){
 					//code this in as needed!
