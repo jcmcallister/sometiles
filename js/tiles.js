@@ -23,12 +23,36 @@
 				this.otherPlayer = null
 			};
 
+
+			//START -- Piece Types DEMO!!!
+
+				//define movement, actions, shape, etc for this piece type
+				//TODO: read all this info in from the server's RGG response data
+				var pcTypes = {
+					types: ["circle","square"],
+					rules:{
+						circle:{
+							directions: "0,2,4,6",
+							numSpacesPerMove: "1"
+							//TODO: any other data fields to be manipulated in gameplay go here!
+						},
+						square:{
+							directions: "1,3,5,7",
+							numSpacesPerMove: "-1"//-1 to codify N spaces? any # of spaces allowable
+							//TODO: will be read in from DB same as above, any other data fields here (UNIFORM with above PieceType rules)
+						}
+					}
+				};
+
+			// END  -- Piece Types DEMO!!!
+
 			var SomeTiles = { 
-				Boards: [],
-				canvasID: "drawhere",
-				Players: [],
-				debug: true
-				//,Game: theGame //TODO: add this once Game is done coming back from server
+					Boards: [],
+					canvasID: "drawhere",
+					Players: [],
+					debug: true
+					//,Game: theGame //TODO: add this once Game is done coming back from server
+					,PieceTypes: pcTypes
 				};
 
 			//our MAIN()
@@ -44,20 +68,21 @@
 				//create Pieces(playerID?)
 				//attach Pieces to Tiles
 				//assign Pieces to Tiles
-					p1.Pieces.push(new Piece(1,20));
+					p1.addPiece(0,20,"foo");
 
 				//make set of Pieces for given player
-					p1.addPiece(1,10,"circle");
+					p1.addPiece(0,10,"circle");
 
 				//check for info 
 					//TODO: clean this up, it's damn near spaghetti!
 					p1.Pieces[0].getTileInfo();
 
 				//display Pieces
-					//p1.Pieces[0].drawPiece();
-
 				//draw ALL pieces
 					p1.drawPieces();
+
+				//DEMO ONLY: remove a piece
+					//p1.removePiece(20);
 
 				//add Mouse listener
 					var canvas = document.getElementById(SomeTiles.canvasID) || document.getElementsByTagName("canvas")[0];
@@ -160,7 +185,6 @@
 
 						this.selectedPiece;//normally a piece ID
 
-
 						SomeTiles.Players.push(this);
 					}
 
@@ -193,9 +217,35 @@
 							p.drawPiece(false);//redraw in same position
 					}
 
-					Player.prototype.addPiece = function(pieceID, tileID, pieceType){
-						var newPiece = new Piece(pieceID, tileID, pieceType);
-						this.Pieces.push(newPiece);
+					Player.prototype.addPiece = function(pnum, tileID, pieceType){
+						this.Pieces.push(new Piece(pnum, tileID, pieceType));
+					}
+
+					Player.prototype.addPieceSet = function(pnum, set, pieceType){
+
+						var curPiece;
+
+						for(var i=0;i<set.length;i++){
+							//curPiece = set[i]; //TODO: finish this method!!!
+						}
+					}
+
+					Player.prototype.removePiece = function(tileID){
+						//TODO: grab piece at given Tile ID, remove it from the Player's piece array and return it
+						var rmPiece = getPiece(tileID);
+
+						if(!rmPiece){ console.error("piece not found at tile " + tileID); return; }
+
+						var pieceArr = SomeTiles.Players[rmPiece.playerNum].Pieces;
+
+						//splice it off
+						for(var i=0;i<pieceArr.length;i++){
+							if(pieceArr[i].id == rmPiece.id){
+								pieceArr.splice(i,1);
+							}
+						}
+
+						return rmPiece;
 					}
 
 					Player.prototype.drawPieces = function(){
@@ -206,18 +256,15 @@
 
 			// END  -- Player Functions
 
-			//START -- Piece Types
-
-				//define movement, actions, shape, etc for this piece type
-
-			// END  -- Piece Types
+			
 
 
 			//START -- PIECE Functions
-				function Piece(id, tileID, type){
-					this.id = id;
+				function Piece(pnum, tileID, type){
+					this.id = (SomeTiles.Players[pnum].Pieces.length)+1;
 					this.tileID = tileID;//which tile it is attached to! Piece is on Tile <i>
 					this.selected = false;
+					this.playerNum = pnum;
 
 					//type determines this Piece's shape, behaviors like movement/weapon actions/etc
 					//TODO: put DB backend to this
