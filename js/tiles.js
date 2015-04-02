@@ -29,7 +29,7 @@
 				//define movement, actions, shape, etc for this piece type
 				//TODO: read all this info in from the server's RGG response data
 				var pcTypes = {
-					types: ["circle","square"],
+					types: ["circle","square", "knight"],
 					rules:{
 						circle:{
 							directions: "0,2,4,6",
@@ -40,6 +40,11 @@
 							directions: "1,3,5,7",
 							numSpacesPerMove: "-1"//-1 to codify N spaces? any # of spaces allowable
 							//TODO: will be read in from DB same as above, any other data fields here (UNIFORM with above PieceType rules)
+						},
+						knight:{
+							imgpath: "img/knight.png",
+							directions: "1,2,3,4,5,6,7,8",
+							numSpacesPerMove: 3
 						}
 					}
 				};
@@ -68,10 +73,13 @@
 				//create Pieces(playerID?)
 				//attach Pieces to Tiles
 				//assign Pieces to Tiles
-					p1.addPiece(0,20,"foo");
+					p1.addPiece(0,2,"foo");
 
 				//make set of Pieces for given player
 					p1.addPiece(0,10,"circle");
+
+				//a piece from an image
+					p1.addPiece(0,20,"knight");
 
 				//check for info 
 					//TODO: clean this up, it's damn near spaghetti!
@@ -174,6 +182,10 @@
 				return t; //just in case its still null or undef
 			}
 
+			function getAllPieceTypes(){
+				return SomeTiles.PieceTypes.types;
+			}
+
 			//START -- Player Functions
 				//Player
 					function Player(num){
@@ -256,7 +268,6 @@
 
 			// END  -- Player Functions
 
-			
 
 
 			//START -- PIECE Functions
@@ -265,14 +276,22 @@
 					this.tileID = tileID;//which tile it is attached to! Piece is on Tile <i>
 					this.selected = false;
 					this.playerNum = pnum;
+					this.imgpath;
 
-					//type determines this Piece's shape, behaviors like movement/weapon actions/etc
 					//TODO: put DB backend to this
-					if(type == 'circle'){
+					if(getAllPieceTypes().indexOf(type) >= 0){
 						this.type = type;
 					}else{
 						this.type = 'square';
+						console.error(type + " not in PieceType object!\n" + SomeTiles.PieceTypes);
 					}
+
+					this.typeRules = this.getTypeRules(this.type);
+
+					//assign image if it exists
+					if(this.typeRules !== undefined){ this.imgpath = this.typeRules.imgpath; }
+
+					//type determines this Piece's shape, behaviors like movement/weapon actions/etc
 
 					//this.behaviors?
 					//this.actions
@@ -287,36 +306,96 @@
 					return SomeTiles.Boards[0].tileSet[this.tileID];
 				}
 
+				Piece.prototype.getTypeRules = function(type){
+					return SomeTiles.PieceTypes.rules[type];
+				}
+
 				Piece.prototype.drawPiece = function(selected){
 					var info = this.getTileInfo();
 
 					if(!info && SomeTiles.debug){ console.warn("Tile info not found for Piece " + this.id); return; }
-					var canvas = document.getElementById(SomeTiles.canvasID) || document.getElementsByTagName("canvas")[0],
-					 radius = Math.min(getBoard().tileWidth, getBoard().tileHeight) * 0.45,
-					 centerX = info.x + (getBoard().tileWidth/2),
-					 centerY = info.y + (getBoard().tileHeight/2),
-					 selColor = "rgba(221,221,221,0.65)",
-					 color = "rgb(221,221,221)";
+					var canvas = document.getElementById(SomeTiles.canvasID) || document.getElementsByTagName("canvas")[0];
 
 					if(canvas && canvas.getContext){
 						var ctx = canvas.getContext("2d");
-						ctx.beginPath();
-					    ctx.arc(centerX, centerY, radius, 0, Math.PI*2, false);
-					    ctx.closePath();
-					    ctx.strokeStyle = "#777";
-					    ctx.stroke();
-					    if (selected) {
-							ctx.fillStyle = "#777";
-							ctx.fill();
-						}else{
-							ctx.fillStyle = "#ddd";
-							ctx.fill();
+						var selColor = "#777";//TODO: color & selectedColor should come from Piece object
+						var color = "#ddd";
+						var board = getBoard();
+
+						var drawType = this.imgpath !== undefined ? "img" : this.type;
+
+						switch(drawType){
+							case 'circle':
+								var radius = Math.min(board.tileWidth, board.tileHeight) * 0.45;
+								var centerX = info.x + (board.tileWidth/2);
+								var centerY = info.y + (board.tileHeight/2);
+
+								ctx.beginPath();
+							    ctx.arc(centerX, centerY, radius, 0, Math.PI*2, false);
+							    ctx.closePath();
+							    ctx.strokeStyle = selColor;
+							    ctx.stroke();
+							    if (selected) {
+									ctx.fillStyle = selColor;
+									ctx.fill();
+								}else{
+									ctx.fillStyle = color;
+									ctx.fill();
+								}
+
+								break;
+							case 'square':
+								var offset = 0.3;
+								var bw = board.tileWidth, bh = board.tileHeight;
+
+
+								var initx = info.x + (offset/2 * bw);
+								var inity = info.y + (offset/2 * bh);
+
+
+							    if (selected) {
+									ctx.fillStyle = selColor;
+								}else{
+									ctx.fillStyle = color;
+								}
+
+								ctx.fillRect(initx,inity,bw - 2*((offset/2)*bw),bh -2*(offset/2)*bh);
+
+								break;
+							case 'img':
+								//TODO: handle types that require drawn images!
+								//load image
+								var img = new Image();
+								img.src = this.imgpath;
+								//img.width = board.tileWidth;
+								//img.height = board.tileHeight;
+								
+
+
+								//TODO: alter image data to tint it towards the player's colors
+								//var data = ctz.getImageData
+								//var oldcrap = ctx.globalCompositeOperation;
+								//ctx.globalCompositeOperation = 'lighter';
+
+
+								//draw image
+								ctx.drawImage(img, info.x, info.y, board.tileWidth, board.tileHeight);
+
+
+								//TODO: remove once tint is in 
+								//set the op back?
+								//ctx.globalCompositeOperation = oldcrap;
+								break;
+							default:
+								//TODO: decide on a default piece to be drawn?
+								console.error("invalid Piece type specified! not drawing!")
 						}
+					 
 
 
-					}
+					}//canvas & context
 					
-				}
+				}//end fn
 
 
 				/*function getPieces(tileIndex){
@@ -339,11 +418,12 @@
 
 					this.hasPiece = false;
 					this.numPieces = 0;
-					this.pieceInfo = null;
+					this.pieceInfo = [];
 
 					//methods done in proto.
 				}
 
+				/* //THESE ARE NOT IN USE RIGHT NOW
 				Tile.prototype.setPiece = function(player_id){
 					//TODO: cleanup
 					this.hasPiece = true;
@@ -356,6 +436,7 @@
 					//this fn seems redundant in JS, because it's not Java-scope strict
 					return this.pieceInfo;
 				}
+				*/
 
 			// END  -- Tile Functions
 
