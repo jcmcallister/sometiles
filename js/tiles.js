@@ -114,8 +114,15 @@
 					x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
 					y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
 				}
-				x -= e.target.offsetLeft;
-				y -= e.target.offsetTop;
+
+				//TODO: minor cleanup of vars?
+				if(e.target.offsetLeft == 0 && e.target.offsetTop ==0){
+					x-= e.target.offsetParent.offsetLeft;
+					y-= e.target.offsetParent.offsetTop;
+				}else{
+					x -= e.target.offsetLeft;
+					y -= e.target.offsetTop;
+				}
 
 				x = Math.min(x, b.numTilesX*b.tileWidth);
 				y = Math.min(y, b.numTilesY*b.tileHeight);
