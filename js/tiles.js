@@ -71,7 +71,7 @@
 
 				//create Board (constructor makes Tile set)
 				//display Board
-					var myboard = new Board(7,7,50,50,"drawhere");
+					var myboard = new Board(7,7,50,50,"board","pieces");
 
 					var p1 = new Player(0);
 					
@@ -100,8 +100,42 @@
 					//p1.removePiece(20);
 
 				//add Mouse listener
-					var canvas = document.getElementById(SomeTiles.canvasID) || document.getElementsByTagName("canvas")[0];
+					//must be canvas with highest z-index on page
+					var topLayerCanvas = getTopLayerCanvas();
+
+					
+					var canvas = topLayerCanvas || document.getElementById(SomeTiles.canvasID) || document.getElementsByTagName("canvas")[0];
 					canvas.addEventListener("click", canvasClick, false);
+			}
+
+			function getTopLayerCanvas(){
+				var c = document.getElementsByTagName("canvas");
+				var elem = c[0], zi, maxz = getStyle(c[0].id,"zIndex") || getStyle(c[0].id,"z-index");
+				if(c.length > 1){
+					for(var i=1;i<c.length;i++){
+						zi = getStyle(c[i].id,"zIndex") || getStyle(c[i].id,"z-index");
+						if(zi > maxz){
+							elem = c[i];
+							maxz = zi;
+						}
+					}
+				}
+				return elem;
+			}
+
+			//props to rahul at stackoverflow here: http://stackoverflow.com/questions/1388007/getting-the-z-index-of-a-div-in-javascript
+			function getStyle(el,styleProp){
+			    var x = document.getElementById(el);
+
+			    if (window.getComputedStyle)
+			    {
+			        var y = document.defaultView.getComputedStyle(x,null).getPropertyValue(styleProp); 
+			    }  
+			    else if (x.currentStyle)
+			    {
+			        var y = x.currentStyle[styleProp];
+			    }
+			    return y;
 			}
 
 			function canvasClick(e){
@@ -225,7 +259,7 @@
 						//p.drawPiece(true);//redraw in same position
 					}
 
-					/*
+					
 					Player.prototype.movePiece = function(p,destTile){
 						//TODO: make this more efficient for the love of DOGE!!!
 						//move the given Piece p to the given destination Tile 
@@ -233,17 +267,19 @@
 						//copy the current piece
 						var newpiece = p;
 
-						//step 1: change tile ID of p to destTile
-						newpiece.tileID = destTile.id;
-
+						
 						//The Player deselects the now-moved piece
 						this.selectedPiece = undefined;
 
 						this.removePiece(p.tileID);//remove the original piece!
+						//clearTile(p.tileID);//clear up the old tile onMove
+
+						//step 1: change tile ID of p to destTile
+						//newpiece.tileID = destTile.id;
 
 						//getBoard().drawTile(p.tileID); //redraw this tile
 
-						this.addPiece( this.number,destTile.id, newpiece.type );
+						this.addPieceThenDraw( this.number,destTile.id, newpiece.type );
 						//step 1.5 : redraw the Board
 						//getBoard().drawBoard(SomeTiles.canvasID);
 
@@ -251,11 +287,11 @@
 							//this.drawPieces();
 
 						//step 2.5 redraw the moved piece!
-							newpiece.drawPiece(false);//redraw in same position
-					}*/
+							//newpiece.drawPiece(false);//redraw in same position
+					}
 
 					
-					Player.prototype.movePiece = function(p,destTile){
+					/*Player.prototype.movePiece = function(p,destTile){
 						//TODO: finish implementing the above commented efficient version!
 						//move the given Piece p to the given destination Tile 
 
@@ -273,10 +309,17 @@
 
 						//redraw the moved piece!
 							p.drawPiece(false);//redraw in same position
-					}
+					}*/
 
 					Player.prototype.addPiece = function(playernum, tileID, pieceType){
 						this.Pieces.push(new Piece(playernum, tileID, pieceType));
+					}
+
+					Player.prototype.addPieceThenDraw = function(playernum, tileID, pieceType){
+						var newp = new Piece(playernum, tileID, pieceType);
+						this.Pieces.push(newp);
+						newp.drawPiece(false);
+
 					}
 
 					Player.prototype.addPieceSet = function(playernum, set, pieceType){
@@ -304,7 +347,7 @@
 						}
 
 						//TODO: implement and call the function to redraw this tileID
-
+						rmPiece.clearPiece(tileID);
 
 						return rmPiece;
 					}
@@ -320,8 +363,20 @@
 
 
 			//START -- PIECE Functions
+
+				function generateUUID(){
+				    var d = new Date().getTime();
+				    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+				        var r = (d + Math.random()*16)%16 | 0;
+				        d = Math.floor(d/16);
+				        return (c=='x' ? r : (r&0x3|0x8)).toString(16);
+				    });
+				    return uuid;
+				};
+
 				function Piece(pnum, tileID, type){
-					this.id = (SomeTiles.Players[pnum].Pieces.length)+1;
+					//this.id = (SomeTiles.Players[pnum].Pieces.length)+1;//the Piece ID!
+					this.id = generateUUID();
 					this.tileID = tileID;//which tile it is attached to! Piece is on Tile <i>
 					this.selected = false;
 					this.playerNum = pnum;
@@ -363,13 +418,14 @@
 					var info = this.getTileInfo();
 
 					if(!info && SomeTiles.debug){ console.warn("Tile info not found for Piece " + this.id); return; }
-					var canvas = document.getElementById(SomeTiles.canvasID) || document.getElementsByTagName("canvas")[0];
+					var board = getBoard();
+					var canvas = document.getElementById(board.pieceCanvas) || document.getElementsByTagName("canvas")[0];
 
 					if(canvas && canvas.getContext){
 						var ctx = canvas.getContext("2d");
 						var selColor = SomeTiles.Players[this.playerNum].PieceColorSelect;
 						var color = SomeTiles.Players[this.playerNum].PieceColor;
-						var board = getBoard();
+						
 
 						var drawType = this.imgpath !== undefined ? "img" : this.type;
 
@@ -442,6 +498,27 @@
 					
 				}//end fn
 
+				Piece.prototype.clearPiece = function(){
+					var info = this.getTileInfo();
+
+					if(!info && SomeTiles.debug){ console.warn("Tile info not found for Piece " + this.id); return; }
+					var board = getBoard();
+					var canvas = document.getElementById(board.pieceCanvas) || document.getElementsByTagName("canvas")[0];
+
+					if(canvas && canvas.getContext){
+						var ctx = canvas.getContext("2d");
+
+						//clear the tile-sized space where the piece would normally be drawn
+						ctx.clearRect(info.x,info.y,info.x+board.tileWidth,info.y+board.tileHeight);
+
+
+
+
+						//TODO: check for other pieces that might be on the same Tile too!
+					}
+
+				}//end clearPiece fn
+
 
 				/*function getPieces(tileIndex){
 					//code this in as needed!
@@ -494,7 +571,9 @@
 					return SomeTiles.Boards[0];
 				}
 
-				function Board(numTilesX, numTilesY, tileWidth, tileHeight, canvasID, features, tileCount){
+				function Board(numTilesX, numTilesY, tileWidth, tileHeight, boardCanvasID, pieceCanvasID, features, tileCount){
+					//the Game Board now consists of 2 canvas layers: 1 for the underlying Board and 1 for all the Pieces
+
 					//properties from args
 					this.tileWidth = tileWidth;
 					this.tileHeight = tileHeight;
@@ -503,6 +582,9 @@
 					this.tileCount = tileCount || (numTilesX*numTilesY);
 					this.features = features;
 					this.tileSet = [];
+
+					this.boardCanvas = boardCanvasID;
+					this.pieceCanvas = pieceCanvasID;
 
 					if(this.tileCount <= 100){
 						this.makeTiles();
@@ -514,7 +596,7 @@
 						}
 					}
 
-					this.drawBoard(canvasID);
+					this.drawBoard();
 
 					SomeTiles.Boards.push(this);
 					//methods
@@ -555,7 +637,7 @@
 				//Board will create all tiles needed
 				//Board will display the Tiles
 				Board.prototype.drawBoard = function(canvasID,color,offcolor){
-					var canvas = document.getElementById(canvasID) || document.getElementsByTagName("canvas")[0],
+					var canvas = document.getElementById(this.boardCanvas) || document.getElementsByTagName("canvas")[0],
 						color = color || "#a00",
 						offcolor = offcolor || "#222",
 						hasColors = color && offcolor;
