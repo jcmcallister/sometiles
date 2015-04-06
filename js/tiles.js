@@ -261,55 +261,22 @@
 
 					
 					Player.prototype.movePiece = function(p,destTile){
-						//TODO: make this more efficient for the love of DOGE!!!
 						//move the given Piece p to the given destination Tile 
+						
+						//clearPiece of old tileID
+						p.clearPiece(p.tileID);
 
-						//copy the current piece
-						var newpiece = p;
-
+						//change id
+						p.tileID = destTile.id;
 						
 						//The Player deselects the now-moved piece
 						this.selectedPiece = undefined;
 
-						this.removePiece(p.tileID);//remove the original piece!
-						//clearTile(p.tileID);//clear up the old tile onMove
+						p.drawPiece(false);//TODO: fix bug with this mess
 
-						//step 1: change tile ID of p to destTile
-						//newpiece.tileID = destTile.id;
+						//an old impl'n of this re-drew the whole board + pieces on every pass. this is WORTH IT!
 
-						//getBoard().drawTile(p.tileID); //redraw this tile
-
-						this.addPieceThenDraw( this.number,destTile.id, newpiece.type );
-						//step 1.5 : redraw the Board
-						//getBoard().drawBoard(SomeTiles.canvasID);
-
-						//step 2: redraw pieces
-							//this.drawPieces();
-
-						//step 2.5 redraw the moved piece!
-							//newpiece.drawPiece(false);//redraw in same position
 					}
-
-					
-					/*Player.prototype.movePiece = function(p,destTile){
-						//TODO: finish implementing the above commented efficient version!
-						//move the given Piece p to the given destination Tile 
-
-						//change tile ID of p to destTile
-						p.tileID = destTile.id;
-
-						//deselect piece
-						this.selectedPiece = undefined;
-
-						//redraw the Board
-						getBoard().drawBoard(SomeTiles.canvasID);
-
-						//redraw pieces
-							this.drawPieces();
-
-						//redraw the moved piece!
-							p.drawPiece(false);//redraw in same position
-					}*/
 
 					Player.prototype.addPiece = function(playernum, tileID, pieceType){
 						this.Pieces.push(new Piece(playernum, tileID, pieceType));
@@ -509,8 +476,8 @@
 						var ctx = canvas.getContext("2d");
 
 						//clear the tile-sized space where the piece would normally be drawn
+						//TODO: fix the bug that destroys other pieces on this line!!!
 						ctx.clearRect(info.x,info.y,info.x+board.tileWidth,info.y+board.tileHeight);
-
 
 
 
