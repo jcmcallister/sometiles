@@ -29,7 +29,7 @@
 				//define movement, actions, shape, etc for this piece type
 				//TODO: read all this info in from the server's RGG response data
 				var pcTypes = {
-					types: ["circle","square", "knight"],
+					types: ["circle","square", "knight", "doge"],
 					rules:{
 						circle:{
 							directions: "0,2,4,6",
@@ -45,7 +45,13 @@
 							imgpath: "img/knight.png",
 							directions: "1,2,3,4,5,6,7,8",
 							numSpacesPerMove: 3
+						},
+						doge:{
+							imgpath: "img/doge.png",
+							directions: "1,2,3,4,5,6,7,8",
+							numSpacesPerMove: 1
 						}
+
 					}
 				};
 
@@ -73,10 +79,11 @@
 				//create Pieces(playerID?)
 				//attach Pieces to Tiles
 				//assign Pieces to Tiles
-					p1.addPiece(0,2,"foo");
+					p1.addPiece(0,2,"doge");
 
 				//make set of Pieces for given player
 					p1.addPiece(0,10,"circle");
+					p1.addPiece(0,34,"circle");
 
 				//a piece from an image
 					p1.addPiece(0,20,"knight");
@@ -129,7 +136,7 @@
 					return;
 				}
 
-					//TODO: FIX THIS ONCE PLAYER CODE IN PLACE
+					//TODO: FIX THIS FOR MULTIPLE PLAYERS ONCE CODE IS IN PLACE
 					
 					//select or move the piece in the clicked position!
 
@@ -192,8 +199,9 @@
 						this.number = num;
 						this.Pieces = [];
 						//this.PieceImage = '';
-						this.PieceShape = "circle"; //set of shapes: (circle, triangle)
-						this.PieceColor = "#0b0";//hex or rgba for canvas contexts
+						//this.PieceShape = "circle"; //set of shapes: (circle, triangle)
+						this.PieceColor = "#ddd";//hex or rgba for canvas contexts
+						this.PieceColorSelect = "#777";//hex or rgba for canvas contexts
 
 						this.selectedPiece;//normally a piece ID
 
@@ -211,6 +219,33 @@
 					}
 
 					Player.prototype.movePiece = function(p,destTile){
+						//TODO: make this more efficient for the love of DOGE!!!
+						//move the given Piece p to the given destination Tile 
+
+						//copy the current piece
+						var newpiece = p;
+
+						//step 1: change tile ID of p to destTile
+						newpiece.tileID = destTile.id;
+
+						//The Player deselects the now-moved piece
+						this.selectedPiece = undefined;
+
+						this.removePiece(p.tileID);//remove the original piece!
+						this.addPiece( this.number,destTile.id, newpiece.type );
+						//step 1.5 : redraw the Board
+						//getBoard().drawBoard(SomeTiles.canvasID);
+
+						//step 2: redraw pieces
+							//this.drawPieces();
+
+						//step 2.5 redraw the moved piece!
+							newpiece.drawPiece(false);//redraw in same position
+					}
+
+					/*THAT OLD ONE YO
+					Player.prototype.movePiece = function(p,destTile){
+						//TODO: make this more efficient for the love of DOGE!!!
 						//move the given Piece p to the given destination Tile 
 
 						//step 1: change tile ID of p to destTile
@@ -227,13 +262,13 @@
 
 						//step 2.5 redraw the moved piece!
 							p.drawPiece(false);//redraw in same position
+					}*/
+
+					Player.prototype.addPiece = function(playernum, tileID, pieceType){
+						this.Pieces.push(new Piece(playernum, tileID, pieceType));
 					}
 
-					Player.prototype.addPiece = function(pnum, tileID, pieceType){
-						this.Pieces.push(new Piece(pnum, tileID, pieceType));
-					}
-
-					Player.prototype.addPieceSet = function(pnum, set, pieceType){
+					Player.prototype.addPieceSet = function(playernum, set, pieceType){
 
 						var curPiece;
 
@@ -318,8 +353,8 @@
 
 					if(canvas && canvas.getContext){
 						var ctx = canvas.getContext("2d");
-						var selColor = "#777";//TODO: color & selectedColor should come from Piece object
-						var color = "#ddd";
+						var selColor = SomeTiles.Players[this.playerNum].PieceColorSelect;
+						var color = SomeTiles.Players[this.playerNum].PieceColor;
 						var board = getBoard();
 
 						var drawType = this.imgpath !== undefined ? "img" : this.type;
@@ -366,6 +401,20 @@
 								//TODO: handle types that require drawn images!
 								//load image
 								var img = new Image();
+								img.onload = function(){
+									//thanks to Joe @ PlayMyCode.com for this tint trick! source: http://www.playmycode.com/blog/2011/06/realtime-image-tinting-on-html5-canvas/
+									var rgbks = generateRGBKs(img);
+
+									//var rgbFromHex = getRGBFromHexColor(color);
+
+									var rgbFromHex = selected ? getRGBFromHexColor(selColor) : getRGBFromHexColor(color);
+
+									var tintImg = generateTintImage(img, rgbks, rgbFromHex[0], rgbFromHex[1], rgbFromHex[2]);
+
+									//draw image
+									ctx.drawImage(tintImg, info.x, info.y, board.tileWidth, board.tileHeight);
+
+								}
 								img.src = this.imgpath;
 								//img.width = board.tileWidth;
 								//img.height = board.tileHeight;
@@ -378,16 +427,13 @@
 								//ctx.globalCompositeOperation = 'lighter';
 
 
-								//draw image
-								ctx.drawImage(img, info.x, info.y, board.tileWidth, board.tileHeight);
-
+								
 
 								//TODO: remove once tint is in 
 								//set the op back?
 								//ctx.globalCompositeOperation = oldcrap;
 								break;
 							default:
-								//TODO: decide on a default piece to be drawn?
 								console.error("invalid Piece type specified! not drawing!")
 						}
 					 
@@ -587,4 +633,101 @@
 
 				}//end drawBoard fn
 
+				
+				Board.prototype.drawTile(tileID){
+					//TODO: to help make the Player.movePiece function more efficient!
+				}
+
 			// END  -- Board Functions
+
+			//START -- Image Functions
+			function getRGBFromHexColor(hex){
+				//input: #111 or #112233 hex string
+				//confirm input length to see which case we're dealing with
+				if(hex.length == 4){
+					var result =[parseInt(hex.substring(1,2),16)*16,parseInt(hex.substring(2,3),16)*16,parseInt(hex.substring(3,4),16)*16];
+				}else if(hex.length == 7){
+					var result =[parseInt(hex.substring(1,3),16)*16,parseInt(hex.substring(3,5),16)*16,parseInt(hex.substring(5,7),16)*16];
+				}
+				return result;
+			}
+
+			function generateRGBKs( img ) {
+		        var w = img.width;
+		        var h = img.height;
+		        var rgbks = [];
+
+		        var canvas = document.createElement("canvas");
+		        canvas.width = w;
+		        canvas.height = h;
+		        
+		        var ctx = canvas.getContext("2d");
+		        ctx.drawImage( img, 0, 0 );
+		        
+		        var pixels = ctx.getImageData( 0, 0, w, h ).data;
+
+		        // 4 is used to ask for 3 images: red, green, blue and
+		        // black in that order.
+		        for ( var rgbI = 0; rgbI < 4; rgbI++ ) {
+		            var canvas = document.createElement("canvas");
+		            canvas.width  = w;
+		            canvas.height = h;
+		            
+		            var ctx = canvas.getContext('2d');
+		            ctx.drawImage( img, 0, 0 );
+		            var to = ctx.getImageData( 0, 0, w, h );
+		            var toData = to.data;
+		            
+		            for (
+		                    var i = 0, len = pixels.length;
+		                    i < len;
+		                    i += 4
+		            ) {
+		                toData[i  ] = (rgbI === 0) ? pixels[i  ] : 0;
+		                toData[i+1] = (rgbI === 1) ? pixels[i+1] : 0;
+		                toData[i+2] = (rgbI === 2) ? pixels[i+2] : 0;
+		                toData[i+3] =                pixels[i+3]    ;
+		            }
+		            
+		            ctx.putImageData( to, 0, 0 );
+		            
+		            // image is _slightly_ faster then canvas for this, so convert
+		            var imgComp = new Image();
+		            imgComp.src = canvas.toDataURL();
+		            
+		            rgbks.push( imgComp );
+		        }
+
+		        return rgbks;
+		    }
+
+		      function generateTintImage( img, rgbks, red, green, blue ) {
+		        var buff = document.createElement( "canvas" );
+		        buff.width  = img.width;
+		        buff.height = img.height;
+		        
+		        var ctx  = buff.getContext("2d");
+
+		        ctx.globalAlpha = 1;
+		        ctx.globalCompositeOperation = 'copy';
+		        ctx.drawImage( rgbks[3], 0, 0 );
+
+		        ctx.globalCompositeOperation = 'lighter';
+		        if ( red > 0 ) {
+		            ctx.globalAlpha = red   / 255.0;
+		            ctx.drawImage( rgbks[0], 0, 0 );
+		        }
+		        if ( green > 0 ) {
+		            ctx.globalAlpha = green / 255.0;
+		            ctx.drawImage( rgbks[1], 0, 0 );
+		        }
+		        if ( blue > 0 ) {
+		            ctx.globalAlpha = blue  / 255.0;
+		            ctx.drawImage( rgbks[2], 0, 0 );
+		        }
+
+		        return buff;
+		    }
+
+
+			// END  -- Image Functions
