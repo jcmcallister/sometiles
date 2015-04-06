@@ -5,3 +5,13 @@ body{  }
 	margin-left:auto; margin-right:auto;
 	width:600px;/*def. width*/
 }
+#layers{
+	position: relative;
+}
+#layers canvas{
+	position:absolute;
+	left:0px;
+	top:0px;
+}
+canvas#board{ z-index:1; }
+canvas#pieces{ z-index:2; }

@@ -136,8 +136,8 @@
 					return;
 				}
 
-					//TODO: FIX THIS FOR MULTIPLE PLAYERS ONCE CODE IS IN PLACE
-					
+				//TODO: FIX THIS FOR MULTIPLE PLAYERS ONCE CODE IS IN PLACE
+				
 					//select or move the piece in the clicked position!
 
 					if(thePiece && !player.selectedPiece){
@@ -218,6 +218,7 @@
 						//p.drawPiece(true);//redraw in same position
 					}
 
+					/*
 					Player.prototype.movePiece = function(p,destTile){
 						//TODO: make this more efficient for the love of DOGE!!!
 						//move the given Piece p to the given destination Tile 
@@ -232,6 +233,9 @@
 						this.selectedPiece = undefined;
 
 						this.removePiece(p.tileID);//remove the original piece!
+
+						//getBoard().drawTile(p.tileID); //redraw this tile
+
 						this.addPiece( this.number,destTile.id, newpiece.type );
 						//step 1.5 : redraw the Board
 						//getBoard().drawBoard(SomeTiles.canvasID);
@@ -241,28 +245,28 @@
 
 						//step 2.5 redraw the moved piece!
 							newpiece.drawPiece(false);//redraw in same position
-					}
+					}*/
 
-					/*THAT OLD ONE YO
+					
 					Player.prototype.movePiece = function(p,destTile){
-						//TODO: make this more efficient for the love of DOGE!!!
+						//TODO: finish implementing the above commented efficient version!
 						//move the given Piece p to the given destination Tile 
 
-						//step 1: change tile ID of p to destTile
+						//change tile ID of p to destTile
 						p.tileID = destTile.id;
 
 						//deselect piece
 						this.selectedPiece = undefined;
 
-						//step 1.5 : redraw the Board
+						//redraw the Board
 						getBoard().drawBoard(SomeTiles.canvasID);
 
-						//step 2: redraw pieces
+						//redraw pieces
 							this.drawPieces();
 
-						//step 2.5 redraw the moved piece!
+						//redraw the moved piece!
 							p.drawPiece(false);//redraw in same position
-					}*/
+					}
 
 					Player.prototype.addPiece = function(playernum, tileID, pieceType){
 						this.Pieces.push(new Piece(playernum, tileID, pieceType));
@@ -291,6 +295,9 @@
 								pieceArr.splice(i,1);
 							}
 						}
+
+						//TODO: implement and call the function to redraw this tileID
+
 
 						return rmPiece;
 					}
@@ -416,22 +423,7 @@
 
 								}
 								img.src = this.imgpath;
-								//img.width = board.tileWidth;
-								//img.height = board.tileHeight;
-								
-
-
-								//TODO: alter image data to tint it towards the player's colors
-								//var data = ctz.getImageData
-								//var oldcrap = ctx.globalCompositeOperation;
-								//ctx.globalCompositeOperation = 'lighter';
-
-
-								
-
-								//TODO: remove once tint is in 
-								//set the op back?
-								//ctx.globalCompositeOperation = oldcrap;
+							
 								break;
 							default:
 								console.error("invalid Piece type specified! not drawing!")
@@ -634,8 +626,9 @@
 				}//end drawBoard fn
 
 				
-				Board.prototype.drawTile(tileID){
+				Board.prototype.drawTile = function(tileID){
 					//TODO: to help make the Player.movePiece function more efficient!
+
 				}
 
 			// END  -- Board Functions
@@ -644,6 +637,7 @@
 			function getRGBFromHexColor(hex){
 				//input: #111 or #112233 hex string
 				//confirm input length to see which case we're dealing with
+				var result;
 				if(hex.length == 4){
 					var result =[parseInt(hex.substring(1,2),16)*16,parseInt(hex.substring(2,3),16)*16,parseInt(hex.substring(3,4),16)*16];
 				}else if(hex.length == 7){
