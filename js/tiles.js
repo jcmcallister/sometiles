@@ -24,7 +24,7 @@
 			};
 
 
-			//START -- Piece Types DEMO!!!
+			//START -- Piece Types
 
 				//define movement, actions, shape, etc for this piece type
 				//TODO: read all this info in from the server's RGG response data
@@ -43,27 +43,32 @@
 						},
 						knight:{
 							imgpath: "img/knight.png",
-							directions: "1,2,3,4,5,6,7,8",
+							directions: "*",
 							numSpacesPerMove: 3
 						},
 						doge:{
 							imgpath: "img/doge.png",
-							directions: "1,2,3,4,5,6,7,8",
+							directions: "*",
 							numSpacesPerMove: 1
 						}
 
 					}
 				};
 
-			// END  -- Piece Types DEMO!!!
+
+			// END  -- Piece Types 
 
 			var SomeTiles = { 
 					Boards: [],
-					canvasID: "drawhere",
 					Players: [],
 					debug: true
 					//,Game: theGame //TODO: add this once Game is done coming back from server
 					,PieceTypes: pcTypes
+					,c: {
+						board: "board",
+						pieces: "pieces",
+						moves: "moves"
+					}
 				};
 
 			//our MAIN()
@@ -71,7 +76,7 @@
 
 				//create Board (constructor makes Tile set)
 				//display Board
-					var myboard = new Board(7,7,50,50,"board","pieces");
+					var myboard = new Board(7,7,50,50);
 
 					var p1 = new Player(0);
 					
@@ -138,6 +143,15 @@
 			    return y;
 			}
 
+			function resizeCanvases(w,h){
+				var c = document.getElementsByTagName("canvas");
+
+				for(var i=0;i<c.length;i++){
+					c[i].width = w;
+					c[i].height = h;
+				}
+			}
+
 			function canvasClick(e){
 				//get cursor position
 				var x, y, thePiece, b=getBoard();
@@ -191,7 +205,11 @@
 								//move
 								movestr = "moving piece from Tile id:" + player.selectedPiece.tileID + "\tto Tile id: " + theTile.id;
 								player.movePiece(player.selectedPiece,theTile);
-							}else{ movestr = "can't move from Tile to same Tile!"; }
+							}else{ 
+								player.deselectPiece(thePiece);
+								thePiece.drawPiece(false);
+								movestr = "deselecting! (can't move piece to same Tile)"; 
+							}
 						}
 					}
 
@@ -234,6 +252,12 @@
 				return SomeTiles.PieceTypes.types;
 			}
 
+			function getPieceTypeInfo(t){
+				//searches the types for t. if it exists, returns an Object with that piece type's rule info, else undefined
+				if(typeof t != "string"){t="";}
+				return SomeTiles.PieceTypes.rules[t];
+			}
+
 			//START -- Player Functions
 				//Player
 					function Player(num){
@@ -252,11 +276,35 @@
 					Player.prototype.selectPiece = function(p){
 						this.selectedPiece = p;
 						p.drawPiece(true);//redraw in same position
+
+						//TODO: PRIORITY get valid moves for the now-selected Piece p
+						var pieceRules = getPieceTypeInfo(p.type);
+						var dirs = pieceRules.directions.split(",");
+						for(var i=0;i<dirs.length;i++){
+							//TODO: moves need a class/object to handle all these Move fns
+						}
+
+						//MOVES -- moves are defined as adjacent spaces a player can go to with this newly-selected Piece!
+						//8 moves are classified in counter-clockwise quadrants like cartesian plane
+							//0: space directly to the right
+							//1: space 45 deg upper-right
+							//2: space directly above
+							//3: space 135 deg from 0 aka upper-left
+							//4: space directly left
+							//5: space lower-left
+							//6: space directly below this one
+							//7: space lower-right
+						
+
+						//TODO: SHOW the valid moves for p on the Moves canvas!
+
 					}
 
 					Player.prototype.deselectPiece = function(p){
 						this.selectedPiece = undefined;
-						//p.drawPiece(true);//redraw in same position
+						p.drawPiece(true);//redraw in same position
+
+						//TODO: CLEAR the valid moves away
 					}
 
 					
@@ -270,9 +318,9 @@
 						p.tileID = destTile.id;
 						
 						//The Player deselects the now-moved piece
-						this.selectedPiece = undefined;
+						this.deselectPiece(p);
 
-						p.drawPiece(false);//TODO: fix bug with this mess
+						p.drawPiece(false);
 
 						//an old impl'n of this re-drew the whole board + pieces on every pass. this is WORTH IT!
 
@@ -386,7 +434,7 @@
 
 					if(!info && SomeTiles.debug){ console.warn("Tile info not found for Piece " + this.id); return; }
 					var board = getBoard();
-					var canvas = document.getElementById(board.pieceCanvas) || document.getElementsByTagName("canvas")[0];
+					var canvas = document.getElementById(SomeTiles.c.pieces) || document.getElementsByTagName("canvas")[0];
 
 					if(canvas && canvas.getContext){
 						var ctx = canvas.getContext("2d");
@@ -470,18 +518,20 @@
 
 					if(!info && SomeTiles.debug){ console.warn("Tile info not found for Piece " + this.id); return; }
 					var board = getBoard();
-					var canvas = document.getElementById(board.pieceCanvas) || document.getElementsByTagName("canvas")[0];
+					var canvas = document.getElementById(SomeTiles.c.pieces) || document.getElementsByTagName("canvas")[0];
 
 					if(canvas && canvas.getContext){
 						var ctx = canvas.getContext("2d");
 
 						//clear the tile-sized space where the piece would normally be drawn
-						//TODO: fix the bug that destroys other pieces on this line!!!
-						ctx.clearRect(info.x,info.y,info.x+board.tileWidth,info.y+board.tileHeight);
+						ctx.clearRect(info.x,info.y,board.tileWidth,board.tileHeight);
 
 
 
 						//TODO: check for other pieces that might be on the same Tile too!
+						//is this even important?
+
+
 					}
 
 				}//end clearPiece fn
@@ -538,7 +588,7 @@
 					return SomeTiles.Boards[0];
 				}
 
-				function Board(numTilesX, numTilesY, tileWidth, tileHeight, boardCanvasID, pieceCanvasID, features, tileCount){
+				function Board(numTilesX, numTilesY, tileWidth, tileHeight, features, tileCount){
 					//the Game Board now consists of 2 canvas layers: 1 for the underlying Board and 1 for all the Pieces
 
 					//properties from args
@@ -550,10 +600,7 @@
 					this.features = features;
 					this.tileSet = [];
 
-					this.boardCanvas = boardCanvasID;
-					this.pieceCanvas = pieceCanvasID;
-
-					if(this.tileCount <= 100){
+										if(this.tileCount <= 100){
 						this.makeTiles();
 					}else{
 						if(window.confirm("This Board is going to be large, a total of " + this.tileCount + " pieces!\nContinue?")){
@@ -604,19 +651,14 @@
 				//Board will create all tiles needed
 				//Board will display the Tiles
 				Board.prototype.drawBoard = function(canvasID,color,offcolor){
-					var canvas = document.getElementById(this.boardCanvas) || document.getElementsByTagName("canvas")[0],
+					var canvas = document.getElementById(SomeTiles.c.board) || document.getElementsByTagName("canvas")[0],
 						color = color || "#a00",
 						offcolor = offcolor || "#222",
 						hasColors = color && offcolor;
 
 					if(canvas && canvas.getContext){
 						//fix the canvas bounds to fit the tiles before getting context!
-						//if(canvas.width < this.tileWidth*this.numTilesX){
-							canvas.width = this.tileWidth*this.numTilesX;
-						//}
-						//if(canvas.height < this.tileHeight*this.numTilesY){
-							canvas.height = this.tileHeight*this.numTilesY;
-						//}
+						resizeCanvases(this.tileWidth*this.numTilesX, this.tileHeight*this.numTilesY);
 
 						var ctx = canvas.getContext('2d');
 
@@ -677,7 +719,7 @@
 					}
 
 					//alter the CSS width of container
-					$("#container").css("width",this.tileWidth * this.numTilesX);
+					$("#"+SomeTiles.c.piece).parent().css("width",this.tileWidth * this.numTilesX);
 
 				}//end drawBoard fn
 
