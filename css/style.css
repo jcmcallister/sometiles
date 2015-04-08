@@ -16,3 +16,7 @@ body{  }
 canvas#board{ z-index:1; }
 canvas#moves{ z-index:2; }
 canvas#pieces{ z-index:3; }
+.hidden{ display:none; }
+#dialog{
+	position:relative;
+}

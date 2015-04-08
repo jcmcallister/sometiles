@@ -23,6 +23,14 @@
 				this.otherPlayer = null
 			};
 
+			function showDialog(msg){
+				var btn = '<br><button onclick="hideDialog();">OK!</button>';
+				$("#dialog").html(msg+btn).show();
+			}
+
+			function hideDialog(){
+
+			}
 
 			//START -- Piece Types
 
