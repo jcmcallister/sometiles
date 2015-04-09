@@ -37,12 +37,12 @@
 					rules:{
 						circle:{
 							directions: "r,up,l,d",
-							numSpacesPerMove: "1"
+							numSpacesPerMove: 1
 							//TODO: any other data fields to be manipulated in gameplay go here!
 						},
 						square:{
 							directions: "ur,ul,dl,dr",
-							numSpacesPerMove: "-1"//-1 to codify N spaces? any # of spaces allowable
+							numSpacesPerMove: -1//-1 to codify N spaces? any # of spaces allowable
 							//TODO: will be read in from DB same as above, any other data fields here (UNIFORM with above PieceType rules)
 						},
 						knight:{
@@ -212,6 +212,7 @@
 						movestr = "selecting piece on Tile id:" + theTile.id;
 					}else{
 						if(player.selectedPiece){
+							//TODO: change this IF to check the available moves
 							if(player.selectedPiece.tileID != theTile.id){
 								//move
 								movestr = "moving piece from Tile id:" + player.selectedPiece.tileID + "\tto Tile id: " + theTile.id;
@@ -280,6 +281,7 @@
 						this.PieceColorSelect = "#777";//hex or rgba for canvas contexts
 
 						this.selectedPiece;//normally a piece ID
+						this.allowedMoves = [];//a set of Tile IDs for moves allowed for selected pieces
 
 						SomeTiles.Players.push(this);
 					}
@@ -307,10 +309,15 @@
 
 					Player.prototype.deselectPiece = function(p){
 						this.selectedPiece = undefined;
+						this.allowedMoves = [];
 						p.drawPiece(true);//redraw in same position
 
 						//CLEAR the valid moves away
 						clearMoves();
+					}
+
+					Player.prototype.getValidMoves = function(p){
+
 					}
 
 					Player.prototype.showValidMoves = function(p){
@@ -321,6 +328,7 @@
 						}
 						var dirs = mydirs.split(",");
 						var destTileID, b= getBoard(), x=b.numTilesX, y=b.numTilesY;
+
 						for(var i=0;i<dirs.length;i++){
 							//TODO? do moves need a class/object to handle all these Move fns
 							//draw each move on the moves canvas
@@ -330,7 +338,21 @@
 								switch(dirs[i]){
 									case "r":
 										if(p.tileID <= ((x*y)-x)-1){
+											//TODO: finish this crap
+											var j = 0, tid = p.tileID;
 											destTileID = p.tileID + b.numTilesY;
+
+
+											while(j < pieceRules.numSpacesPerMove){
+												if(tid % y > 0){
+													destTileID = j==0 ? tid - 1 : destTileID - 1;
+													tid = destTileID;
+													this.allowedMoves.push(destTileID);
+													//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
+												}else{ j = pieceRules.numSpacesPerMove; }
+												j++;
+											}
+
 										}
 										break;
 									case "ur":
@@ -340,7 +362,16 @@
 										break;
 									case "up":
 										if(p.tileID % y > 0){
-											destTileID = p.tileID - 1;
+											var j = 0, tid = p.tileID;
+											while(j < pieceRules.numSpacesPerMove){
+												if(tid % y > 0){
+													destTileID = j==0 ? tid - 1 : destTileID - 1;
+													tid = destTileID;
+													this.allowedMoves.push(destTileID);
+													//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
+												}else{ j = pieceRules.numSpacesPerMove; }
+												j++;
+											}
 										}
 										break;
 									case "ul":
@@ -375,17 +406,20 @@
 								}
 								if(destTileID !== undefined){
 									//draw Move at destTileID
-									drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
+									//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
 								}
 
 								//reset destTileID for next loop pass
 								destTileID = undefined;
-						}
+
+						}//end loop
 					}
 					
 					Player.prototype.movePiece = function(p,destTile){
 						//move the given Piece p to the given destination Tile 
 						
+						//TODO: check the piece's move
+
 						//clearPiece of old tileID
 						p.clearPiece(p.tileID);
 
@@ -456,8 +490,10 @@
 						var color = SomeTiles.boardColors[0];
 
 						//use inverted colors of Board tile for better UI coloring of potential moves
-						ctx.fillStyle = tileID % 2 == 1 ? invertHexColor(color) : invertHexColor(offcolor);
-						
+							//var rgb = tileID %2 == 1 ? getRGBFromHexColor(invertHexColor(color)) : getRGBFromHexColor(invertHexColor(offcolor));
+							//ctx.fillStyle = "rgba("+rgb[0]+","+rgb[1]+","+rgb[2]+","+0.3+")";
+
+						ctx.fillStyle = "rgba(255,255,255,0.3)";
 						//intuitive x value: (tileID / board.numTilesY>>0)*board.tileWidth
 						//intuitive y value: (tileID / board.numTilesX>>0)*board.tileHeight
 						ctx.fillRect(x,y,board.tileWidth,board.tileHeight);
