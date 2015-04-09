@@ -291,7 +291,8 @@
 						p.drawPiece(true);//redraw in same position
 
 						//get valid moves for the now-selected Piece p
-						this.showValidMoves(p);
+						this.getValidMoves(p);
+						this.showValidMoves();
 						
 
 						//MOVES -- moves are defined as adjacent spaces a player can go to with this newly-selected Piece!
@@ -316,11 +317,15 @@
 						clearMoves();
 					}
 
-					Player.prototype.getValidMoves = function(p){
-
+					Player.prototype.showValidMoves = function(){
+						var t, b = getBoard();
+						for(var i=0;i<this.allowedMoves.length;i++){
+							t = this.allowedMoves[i];
+							drawMove(t,b.getTile(t).x,b.getTile(t).y);
+						}
 					}
 
-					Player.prototype.showValidMoves = function(p){
+					Player.prototype.getValidMoves = function(p){
 						var pieceRules = getPieceTypeInfo(p.type);
 						var mydirs = pieceRules.directions;
 						if(mydirs == "*"){
@@ -340,12 +345,10 @@
 										if(p.tileID <= ((x*y)-x)-1){
 											//TODO: finish this crap
 											var j = 0, tid = p.tileID;
-											destTileID = p.tileID + b.numTilesY;
-
 
 											while(j < pieceRules.numSpacesPerMove){
-												if(tid % y > 0){
-													destTileID = j==0 ? tid - 1 : destTileID - 1;
+												if(tid <= ((x*y)-x)-1){
+													destTileID = tid + b.numTilesY;//set allowable move
 													tid = destTileID;
 													this.allowedMoves.push(destTileID);
 													//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
@@ -357,7 +360,19 @@
 										break;
 									case "ur":
 										if(p.tileID <= ((x*y)-x)-1 && (p.tileID % y) > 0 ){
-											destTileID = p.tileID + b.numTilesY-1;
+											
+											var j = 0, tid = p.tileID;
+											while(j < pieceRules.numSpacesPerMove){
+												if(tid <= ((x*y)-x)-1 && (tid % y) > 0 ){
+													destTileID = tid + b.numTilesY-1;//set allowable move
+													tid = destTileID;
+													this.allowedMoves.push(destTileID);
+													//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
+												}else{ j = pieceRules.numSpacesPerMove; }
+												j++;
+											}
+
+
 										}
 										break;
 									case "up":
@@ -365,7 +380,7 @@
 											var j = 0, tid = p.tileID;
 											while(j < pieceRules.numSpacesPerMove){
 												if(tid % y > 0){
-													destTileID = j==0 ? tid - 1 : destTileID - 1;
+													destTileID = j==0 ? tid - 1 : destTileID - 1;//set allowable move
 													tid = destTileID;
 													this.allowedMoves.push(destTileID);
 													//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
@@ -376,27 +391,88 @@
 										break;
 									case "ul":
 										if(p.tileID >= y && p.tileID % y > 0){
-											destTileID = (p.tileID - y) - 1;
+
+
+											var j = 0, tid = p.tileID;
+											while(j < pieceRules.numSpacesPerMove){
+												if(tid >= y && tid % y > 0){
+													destTileID = (tid - y) - 1;//set allowable move
+													tid = destTileID;
+													this.allowedMoves.push(destTileID);
+													//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
+												}else{ j = pieceRules.numSpacesPerMove; }
+												j++;
+											}
+
+
 										}
 										break;
 									case "l":
 										if(p.tileID >= y){
-											destTileID = p.tileID - y;
+
+											var j = 0, tid = p.tileID;
+											while(j < pieceRules.numSpacesPerMove){
+												if(tid >= y){
+													destTileID = tid - y;//set allowable move
+													tid = destTileID;
+													this.allowedMoves.push(destTileID);
+													//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
+												}else{ j = pieceRules.numSpacesPerMove; }
+												j++;
+											}
+
 										}
 										break;
 									case "dl":
 										if(p.tileID >= y && (p.tileID % y) != (y-1)){
-											destTileID = (p.tileID - y) + 1;
+											
+
+
+											var j = 0, tid = p.tileID;
+											while(j < pieceRules.numSpacesPerMove){
+												if(tid >= y && (tid % y) != (y-1)){
+													destTileID = (tid - y) + 1;//set allowable move
+													tid = destTileID;
+													this.allowedMoves.push(destTileID);
+													//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
+												}else{ j = pieceRules.numSpacesPerMove; }
+												j++;
+											}
+
 										}
 										break;
 									case "d":
 										if((p.tileID % y) != (y-1)){
-											destTileID = p.tileID + 1;
+											
+
+											var j = 0, tid = p.tileID;
+											while(j < pieceRules.numSpacesPerMove){
+												if((tid % y) != (y-1)){
+													destTileID = tid + 1;//set allowable move
+													tid = destTileID;
+													this.allowedMoves.push(destTileID);
+													//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
+												}else{ j = pieceRules.numSpacesPerMove; }
+												j++;
+											}
+
 										}
 										break;
 									case "dr":
 										if(p.tileID <= ((x*y)-x)-1 && (p.tileID % y) != (y-1)){
-											destTileID = (p.tileID + y) + 1;
+
+
+											var j = 0, tid = p.tileID;
+											while(j < pieceRules.numSpacesPerMove){
+												if(tid <= ((x*y)-x)-1 && (tid % y) != (y-1)){
+													destTileID = tid + y + 1;//set allowable move
+													tid = destTileID;
+													this.allowedMoves.push(destTileID);
+													//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
+												}else{ j = pieceRules.numSpacesPerMove; }
+												j++;
+											}
+
 										}
 										break;
 									default:
