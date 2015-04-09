@@ -2,13 +2,9 @@
 			//Next steps: 				Multiple pieces, tile feature triggers, 2 players hotseat, Rules
 
 
-			//TODO ASAP: clean this spaghetti up with some Prototypal Inheritance of my Objects!!!
-
-
 			//Board is made up of Tiles
 			//Game Pieces occupy Tiles, based on moves from the Player
 			//In this sketch, Main() will test the Player moving GamePieces onto Tiles
-			//var canvasID = "drawhere";
 
 			//a Game is a set of rules, Objects describing those rules, a RuleChecker, and an otherPlayer Object
 			function Game(ServerResponse){
@@ -25,11 +21,11 @@
 
 			function showDialog(msg){
 				var btn = '<br><button onclick="hideDialog();">OK!</button>';
-				$("#dialog").html(msg+btn).show();
+				$("#dialog").html(msg+btn).removeClass("hidden");
 			}
 
 			function hideDialog(){
-
+				$("#dialog").addClass("hidden");
 			}
 
 			//START -- Piece Types
@@ -40,12 +36,12 @@
 					types: ["circle","square", "knight", "doge"],
 					rules:{
 						circle:{
-							directions: "0,2,4,6",
+							directions: "r,up,l,d",
 							numSpacesPerMove: "1"
 							//TODO: any other data fields to be manipulated in gameplay go here!
 						},
 						square:{
-							directions: "1,3,5,7",
+							directions: "ur,ul,dl,dr",
 							numSpacesPerMove: "-1"//-1 to codify N spaces? any # of spaces allowable
 							//TODO: will be read in from DB same as above, any other data fields here (UNIFORM with above PieceType rules)
 						},
@@ -77,6 +73,7 @@
 						pieces: "pieces",
 						moves: "moves"
 					}
+					,boardColors: ["#a00","#222"]
 				};
 
 			//our MAIN()
@@ -101,23 +98,15 @@
 				//a piece from an image
 					p1.addPiece(0,20,"knight");
 
-				//check for info 
-					//TODO: clean this up, it's damn near spaghetti!
-					p1.Pieces[0].getTileInfo();
-
 				//display Pieces
 				//draw ALL pieces
 					p1.drawPieces();
 
-				//DEMO ONLY: remove a piece
-					//p1.removePiece(20);
-
 				//add Mouse listener
 					//must be canvas with highest z-index on page
 					var topLayerCanvas = getTopLayerCanvas();
-
 					
-					var canvas = topLayerCanvas || document.getElementById(SomeTiles.canvasID) || document.getElementsByTagName("canvas")[0];
+					var canvas = topLayerCanvas || document.getElementsByTagName("canvas")[0];
 					canvas.addEventListener("click", canvasClick, false);
 			}
 
@@ -158,12 +147,18 @@
 					c[i].width = w;
 					c[i].height = h;
 				}
+
+				$("#dialog").css("marginTop",h);
 			}
 
 			function canvasClick(e){
 				//get cursor position
-				var x, y, thePiece, b=getBoard();
-				if(e.pageX  != undefined && e.pageY != undefined){
+				var x, y, thePiece, b=getBoard(), usingOffset = false;
+				if(e.offsetX != undefined && e.offsetY != undefined){
+					x = e.offsetX;
+					y = e.offsetY;
+					usingOffset = true;
+				}else if(e.pageX  != undefined && e.pageY != undefined){
 					x = e.pageX;
 					y = e.pageY;
 				}else{
@@ -171,15 +166,23 @@
 					y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
 				}
 
-				//TODO: minor cleanup of vars?
-				if(e.target.offsetLeft == 0 && e.target.offsetTop ==0){
-					x-= e.target.offsetParent.offsetLeft;
-					y-= e.target.offsetParent.offsetTop;
-				}else{
-					x -= e.target.offsetLeft;
-					y -= e.target.offsetTop;
+				if(!usingOffset){
+					//some variables to check in the browser
+					var offsetVarsX = [e.offsetX, e.target.offsetLeft, e.target.offsetParent.offsetLeft];
+					var offsetVarsY = [e.offsetY, e.target.offsetTop, e.target.offsetParent.offsetTop];
+					var offX, offY;
+					for(var k=0;k<offsetVarsX.length;k++){
+						if(offsetVarsX[k] == 0 && offsetVarsY[k]==0){
+							continue;
+						}else{
+							offX = offsetVarsX[k];
+							offY = offsetVarsY[k] 
+						}
+					}
+					
+					x -= offX;
+					y -= offY;
 				}
-
 				x = Math.min(x, b.numTilesX*b.tileWidth);
 				y = Math.min(y, b.numTilesY*b.tileHeight);
 
@@ -285,36 +288,100 @@
 						this.selectedPiece = p;
 						p.drawPiece(true);//redraw in same position
 
-						//TODO: PRIORITY get valid moves for the now-selected Piece p
-						var pieceRules = getPieceTypeInfo(p.type);
-						var dirs = pieceRules.directions.split(",");
-						for(var i=0;i<dirs.length;i++){
-							//TODO: moves need a class/object to handle all these Move fns
-						}
+						//get valid moves for the now-selected Piece p
+						this.showValidMoves(p);
+						
 
 						//MOVES -- moves are defined as adjacent spaces a player can go to with this newly-selected Piece!
 						//8 moves are classified in counter-clockwise quadrants like cartesian plane
-							//0: space directly to the right
-							//1: space 45 deg upper-right
-							//2: space directly above
-							//3: space 135 deg from 0 aka upper-left
-							//4: space directly left
-							//5: space lower-left
-							//6: space directly below this one
-							//7: space lower-right
+							//'r' space directly to the right
+							//'ur': space 45 deg upper-right
+							//'up': space directly above
+							//'ul': space 135 deg from 0 aka upper-left
+							//'l': space directly left
+							//'dl': space lower-left
+							//'d': space directly below this one
+							//'dr': space lower-right
 						
-
-						//TODO: SHOW the valid moves for p on the Moves canvas!
-
 					}
 
 					Player.prototype.deselectPiece = function(p){
 						this.selectedPiece = undefined;
 						p.drawPiece(true);//redraw in same position
 
-						//TODO: CLEAR the valid moves away
+						//CLEAR the valid moves away
+						clearMoves();
 					}
 
+					Player.prototype.showValidMoves = function(p){
+						var pieceRules = getPieceTypeInfo(p.type);
+						var mydirs = pieceRules.directions;
+						if(mydirs == "*"){
+							mydirs = "r,ur,up,ul,l,dl,d,dr";
+						}
+						var dirs = mydirs.split(",");
+						var destTileID, b= getBoard(), x=b.numTilesX, y=b.numTilesY;
+						for(var i=0;i<dirs.length;i++){
+							//TODO? do moves need a class/object to handle all these Move fns
+							//draw each move on the moves canvas
+								//check if valid move using Board.numTilesX/Y and p.tileID for proximity
+								//TODO PRIORITY: extend this to the pieceRules.numSpacesPerMove, BELOW WORKS ONLY FOR 1 space per turn
+									//IDEA: some fn to get/display Move vectors past this first piece showValidMoves run
+								switch(dirs[i]){
+									case "r":
+										if(p.tileID <= ((x*y)-x)-1){
+											destTileID = p.tileID + b.numTilesY;
+										}
+										break;
+									case "ur":
+										if(p.tileID <= ((x*y)-x)-1 && (p.tileID % y) > 0 ){
+											destTileID = p.tileID + b.numTilesY-1;
+										}
+										break;
+									case "up":
+										if(p.tileID % y > 0){
+											destTileID = p.tileID - 1;
+										}
+										break;
+									case "ul":
+										if(p.tileID >= y && p.tileID % y > 0){
+											destTileID = (p.tileID - y) - 1;
+										}
+										break;
+									case "l":
+										if(p.tileID >= y){
+											destTileID = p.tileID - y;
+										}
+										break;
+									case "dl":
+										if(p.tileID >= y && (p.tileID % y) != (y-1)){
+											destTileID = (p.tileID - y) + 1;
+										}
+										break;
+									case "d":
+										if((p.tileID % y) != (y-1)){
+											destTileID = p.tileID + 1;
+										}
+										break;
+									case "dr":
+										if(p.tileID <= ((x*y)-x)-1 && (p.tileID % y) != (y-1)){
+											destTileID = (p.tileID + y) + 1;
+										}
+										break;
+									default:
+										console.error("unknown move direction found! tried: " + dirs[i]);
+										//throw new Problem("bad move detected");
+									
+								}
+								if(destTileID !== undefined){
+									//draw Move at destTileID
+									drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
+								}
+
+								//reset destTileID for next loop pass
+								destTileID = undefined;
+						}
+					}
 					
 					Player.prototype.movePiece = function(p,destTile){
 						//move the given Piece p to the given destination Tile 
@@ -345,17 +412,9 @@
 
 					}
 
-					Player.prototype.addPieceSet = function(playernum, set, pieceType){
-
-						var curPiece;
-
-						for(var i=0;i<set.length;i++){
-							//curPiece = set[i]; //TODO: finish this method!!!
-						}
-					}
 
 					Player.prototype.removePiece = function(tileID){
-						//TODO: grab piece at given Tile ID, remove it from the Player's piece array and return it
+						//grab piece at given Tile ID, remove it from the Player's piece array and return it
 						var rmPiece = getPiece(tileID);
 
 						if(!rmPiece){ console.error("piece not found at tile " + tileID); return; }
@@ -369,7 +428,7 @@
 							}
 						}
 
-						//TODO: implement and call the function to redraw this tileID
+						//clear away ONLY this tileID
 						rmPiece.clearPiece(tileID);
 
 						return rmPiece;
@@ -382,6 +441,65 @@
 					}
 
 			// END  -- Player Functions
+
+
+			//START -- Move Functions
+
+				function drawMove(tileID, x,y){
+					if(tileID === undefined && SomeTiles.debug){ console.warn("Tile ID needed for drawMove!"); return; }
+					var board = getBoard();
+					var canvas = document.getElementById(SomeTiles.c.moves) || document.getElementsByTagName("canvas")[0];
+
+					if(canvas && canvas.getContext){
+						var ctx = canvas.getContext("2d");
+						var offcolor = SomeTiles.boardColors[1];
+						var color = SomeTiles.boardColors[0];
+
+						//use inverted colors of Board tile for better UI coloring of potential moves
+						ctx.fillStyle = tileID % 2 == 1 ? invertHexColor(color) : invertHexColor(offcolor);
+						
+						//intuitive x value: (tileID / board.numTilesY>>0)*board.tileWidth
+						//intuitive y value: (tileID / board.numTilesX>>0)*board.tileHeight
+						ctx.fillRect(x,y,board.tileWidth,board.tileHeight);
+
+					}
+
+				}
+
+
+				function clearMoves(){
+					var canvas = document.getElementById(SomeTiles.c.moves);
+					if(canvas && canvas.getContext){
+						var ctx = canvas.getContext("2d");
+						// Store the current transformation matrix
+						ctx.save();
+
+						// Use the identity matrix while clearing the canvas
+						ctx.setTransform(1, 0, 0, 1, 0, 0);
+						ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+						// Restore the transform
+						ctx.restore();
+
+					}
+				}
+
+
+				function invertHexColor(str){
+					//length could be 4 or 7
+					var hex = parseInt("0x"+str.substring(1));
+					if(str.length == 4){
+						hex = hex ^ 0xfff;
+					}else if(str.length == 7){
+						hex = hex ^ 0xffffff;
+					}else{
+						console.warn("invertHexColor:: input not length 4 or 7!");
+					}
+					return "#"+hex.toString(16);
+				}
+
+
+			// END  -- Move Functions
 
 
 
@@ -424,10 +542,6 @@
 					//this.actions
 					//this.moveset
 				}
-
-				/*function getPlayerPieces(playerid){
-					return this.hasPiece;
-				}*/
 
 				Piece.prototype.getTileInfo = function(){
 					return SomeTiles.Boards[0].tileSet[this.tileID];
@@ -491,14 +605,12 @@
 
 								break;
 							case 'img':
-								//TODO: handle types that require drawn images!
+								//handle types that require drawn images!
 								//load image
 								var img = new Image();
 								img.onload = function(){
 									//thanks to Joe @ PlayMyCode.com for this tint trick! source: http://www.playmycode.com/blog/2011/06/realtime-image-tinting-on-html5-canvas/
 									var rgbks = generateRGBKs(img);
-
-									//var rgbFromHex = getRGBFromHexColor(color);
 
 									var rgbFromHex = selected ? getRGBFromHexColor(selColor) : getRGBFromHexColor(color);
 
@@ -514,12 +626,9 @@
 							default:
 								console.error("invalid Piece type specified! not drawing!")
 						}
-					 
-
-
 					}//canvas & context
-					
 				}//end fn
+
 
 				Piece.prototype.clearPiece = function(){
 					var info = this.getTileInfo();
@@ -530,25 +639,17 @@
 
 					if(canvas && canvas.getContext){
 						var ctx = canvas.getContext("2d");
-
 						//clear the tile-sized space where the piece would normally be drawn
 						ctx.clearRect(info.x,info.y,board.tileWidth,board.tileHeight);
 
-
-
 						//TODO: check for other pieces that might be on the same Tile too!
-						//is this even important?
-
-
+							//is this even important? in some contexts, it could be
+							//logic: if otherPieces, then redraw them here?
 					}
-
 				}//end clearPiece fn
 
-
-				/*function getPieces(tileIndex){
-					//code this in as needed!
-				}*/
 			// END  -- PIECE Functions
+
 
 			//START -- Tile Functions
 				function Tile(id,x,y){
@@ -572,7 +673,6 @@
 
 				/* //THESE ARE NOT IN USE RIGHT NOW
 				Tile.prototype.setPiece = function(player_id){
-					//TODO: cleanup
 					this.hasPiece = true;
 					this.numPieces++;
 					this.pieceInfo = {player: player_id};
@@ -633,8 +733,7 @@
 
 				Board.prototype.makeTiles = function(tileWidth, tileHeight, features){
 					//makes the set of Tile objects
-					//TODO: ensure that generated tile IDs do not conflict
-					//TODO: special tile features distribution
+					//TODO: special tile environmental features distribution
 					var w = tileWidth || this.tileWidth,
 						h = tileHeight || this.tileHeight,
 						tileIndex = 0;
@@ -658,10 +757,10 @@
 				//draw Board with n-by-n tiles
 				//Board will create all tiles needed
 				//Board will display the Tiles
-				Board.prototype.drawBoard = function(canvasID,color,offcolor){
+				Board.prototype.drawBoard = function(canvasID,colorarg,altcolorarg){
 					var canvas = document.getElementById(SomeTiles.c.board) || document.getElementsByTagName("canvas")[0],
-						color = color || "#a00",
-						offcolor = offcolor || "#222",
+						color = colorarg || SomeTiles.boardColors[0],
+						offcolor = altcolorarg || SomeTiles.boardColors[1],
 						hasColors = color && offcolor;
 
 					if(canvas && canvas.getContext){
@@ -732,9 +831,9 @@
 				}//end drawBoard fn
 
 				
-				Board.prototype.drawTile = function(tileID){
-					//TODO: to help make the Player.movePiece function more efficient!
-
+				Board.prototype.getTile = function(tid){
+					//returns a tile's info from just a tid
+					return this.tileSet[tid];
 				}
 
 			// END  -- Board Functions

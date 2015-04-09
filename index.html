@@ -2,8 +2,9 @@
 <html>
 
 	<head>
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
-		<script src="http://cdnjs.cloudflare.com/ajax/libs/camanjs/4.0.0/caman.full.min.js"></script>
+		<script src="js/jquery-1.11.2.min.js"></script>
+		<!--<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+		<script src="http://cdnjs.cloudflare.com/ajax/libs/camanjs/4.0.0/caman.full.min.js"></script>-->
 		<script src="js/tiles.js"></script>
 
 		<link rel="stylesheet" type="text/css" href="css/style.css">
@@ -12,18 +13,20 @@
 	<body onload="onceLoaded();">
 
 		<div id="container">
-			<h1>Tiles Gameplay Demo</h1>
-			<div id="layers">
-				<canvas id="board" width="500" height="500"></canvas>
-				<canvas id="moves" width="500" height="500"></canvas>
-				<canvas id="pieces" width="500" height="500"></canvas>
-				<!-- OLD CANVAS BELOW-->
-				<!--<canvas id="drawhere" width="500" height="500">
-					<h3>This application requires a browser that supports Canvas, like Chrome or Firefox.</h3>
-				</canvas>-->
+			<div id="gameplay">
+				<h1>Tiles Gameplay Demo</h1>
+				<div id="layers">
+					<canvas id="board" width="500" height="500"></canvas>
+					<canvas id="moves" width="500" height="500"></canvas>
+					<canvas id="pieces" width="500" height="500"></canvas>
+					<!-- OLD CANVAS BELOW-->
+					<!--<canvas id="drawhere" width="500" height="500">
+						<h3>This application requires a browser that supports Canvas, like Chrome or Firefox.</h3>
+					</canvas>-->
+				</div>
 			</div>
-			<div id="derp">
-				<div id="dialog">foo</div>
+			<div id="dialog" class="hidden">
+				foo
 			</div>
 		</div>
 
