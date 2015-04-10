@@ -40,6 +40,8 @@
 							numSpacesPerMove: 1,
 							piecesPerPlayer: 4,
 							startingPositions: [[0,0],[2,3], [0,7],[2,4]]//structured order = numeric xy coords, random places on half board = -1
+							//TODO Priority: multi-vector movement e.g. Knights in Chess, or double-jumps in Checkers
+							//TODO: leapfrog piece captures for Checkers. HOW TO ABSTRACT THAT?
 							//TODO: any other data fields to be manipulated in gameplay go here!
 						},
 						square:{
@@ -256,7 +258,7 @@
 					return;
 				}
 
-				//TODO: FIX THIS FOR MULTIPLE PLAYERS ONCE CODE IS IN PLACE
+				//TODO Priority: FIX THIS FOR MULTIPLE PLAYERS ONCE CODE IS IN PLACE
 				
 					//select or move the piece in the clicked position!
 
