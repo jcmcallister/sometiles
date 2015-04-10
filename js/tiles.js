@@ -94,6 +94,7 @@
 				//make set of Pieces for given player
 					p1.addPiece(0,10,"circle");
 					p1.addPiece(0,34,"circle");
+					p1.addPiece(0,44,"square");
 
 				//a piece from an image
 					p1.addPiece(0,20,"knight");
@@ -212,8 +213,9 @@
 						movestr = "selecting piece on Tile id:" + theTile.id;
 					}else{
 						if(player.selectedPiece){
-							//TODO: change this IF to check the available moves
 							if(player.selectedPiece.tileID != theTile.id){
+
+								//check the available moves
 								if(player.allowedMoves.indexOf(theTile.id) > -1 ){
 									//move is legit, move the piece!
 									hideDialog();//hide error message if still visible
@@ -241,7 +243,7 @@
 			}
 
 			function getPiece(tid){
-				//select the Piece from all Players & their sets of Pieces
+				//select ONE Piece from all Players with Tile ID tid
 				var players = SomeTiles.Players, p;
 				for(var pidx =0; pidx < players.length; pidx++){
 					for(var i = 0; i< players[pidx].Pieces.length;i++){
@@ -252,6 +254,20 @@
 					}
 				}
 				return;
+			}
+
+			function getPieces(tid){
+				//select all Pieces from all Players with the given Tile ID
+				var players = SomeTiles.Players, p, pieces = [];
+				for(var pidx =0; pidx < players.length; pidx++){
+					for(var i = 0; i< players[pidx].Pieces.length;i++){
+						p = players[pidx].Pieces[i];
+						if(p.hasOwnProperty("tileID") && p.tileID == tid){
+							pieces.push(p);
+						}
+					}
+				}
+				return pieces;
 			}
 
 			function getTileFromXY(x,y){
@@ -340,27 +356,29 @@
 							mydirs = "r,ur,up,ul,l,dl,d,dr";
 						}
 						var dirs = mydirs.split(",");
-						var destTileID, b= getBoard(), x=b.numTilesX, y=b.numTilesY;
+						var destTileID, b= getBoard(), x=b.numTilesX, y=b.numTilesY, mvlen = pieceRules.numSpacesPerMove;
+
+						if(mvlen == "*" || mvlen == -1){
+							mvlen = Math.max(x,y);
+						}
 
 						for(var i=0;i<dirs.length;i++){
 							//TODO? do moves need a class/object to handle all these Move fns
 							//draw each move on the moves canvas
 								//check if valid move using Board.numTilesX/Y and p.tileID for proximity
-								//TODO PRIORITY: extend this to the pieceRules.numSpacesPerMove, BELOW WORKS ONLY FOR 1 space per turn
-									//IDEA: some fn to get/display Move vectors past this first piece showValidMoves run
+								//movement in simple vectors using pieceRules.numSpacesPerMove
 								switch(dirs[i]){
 									case "r":
 										if(p.tileID <= ((x*y)-x)-1){
-											//TODO: finish this crap
 											var j = 0, tid = p.tileID;
 
-											while(j < pieceRules.numSpacesPerMove){
+											while(j < mvlen){
 												if(tid <= ((x*y)-x)-1){
 													destTileID = tid + b.numTilesY;//set allowable move
 													tid = destTileID;
 													this.allowedMoves.push(destTileID);
 													//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
-												}else{ j = pieceRules.numSpacesPerMove; }
+												}else{ j = mvlen; }
 												j++;
 											}
 
@@ -370,13 +388,12 @@
 										if(p.tileID <= ((x*y)-x)-1 && (p.tileID % y) > 0 ){
 											
 											var j = 0, tid = p.tileID;
-											while(j < pieceRules.numSpacesPerMove){
+											while(j < mvlen){
 												if(tid <= ((x*y)-x)-1 && (tid % y) > 0 ){
 													destTileID = tid + b.numTilesY-1;//set allowable move
 													tid = destTileID;
 													this.allowedMoves.push(destTileID);
-													//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
-												}else{ j = pieceRules.numSpacesPerMove; }
+												}else{ j = mvlen; }
 												j++;
 											}
 
@@ -386,13 +403,12 @@
 									case "up":
 										if(p.tileID % y > 0){
 											var j = 0, tid = p.tileID;
-											while(j < pieceRules.numSpacesPerMove){
+											while(j < mvlen){
 												if(tid % y > 0){
 													destTileID = j==0 ? tid - 1 : destTileID - 1;//set allowable move
 													tid = destTileID;
 													this.allowedMoves.push(destTileID);
-													//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
-												}else{ j = pieceRules.numSpacesPerMove; }
+												}else{ j = mvlen; }
 												j++;
 											}
 										}
@@ -402,13 +418,12 @@
 
 
 											var j = 0, tid = p.tileID;
-											while(j < pieceRules.numSpacesPerMove){
+											while(j < mvlen){
 												if(tid >= y && tid % y > 0){
 													destTileID = (tid - y) - 1;//set allowable move
 													tid = destTileID;
 													this.allowedMoves.push(destTileID);
-													//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
-												}else{ j = pieceRules.numSpacesPerMove; }
+												}else{ j = mvlen; }
 												j++;
 											}
 
@@ -419,13 +434,12 @@
 										if(p.tileID >= y){
 
 											var j = 0, tid = p.tileID;
-											while(j < pieceRules.numSpacesPerMove){
+											while(j < mvlen){
 												if(tid >= y){
 													destTileID = tid - y;//set allowable move
 													tid = destTileID;
 													this.allowedMoves.push(destTileID);
-													//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
-												}else{ j = pieceRules.numSpacesPerMove; }
+												}else{ j = mvlen; }
 												j++;
 											}
 
@@ -437,13 +451,12 @@
 
 
 											var j = 0, tid = p.tileID;
-											while(j < pieceRules.numSpacesPerMove){
+											while(j < mvlen){
 												if(tid >= y && (tid % y) != (y-1)){
 													destTileID = (tid - y) + 1;//set allowable move
 													tid = destTileID;
 													this.allowedMoves.push(destTileID);
-													//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
-												}else{ j = pieceRules.numSpacesPerMove; }
+												}else{ j = mvlen; }
 												j++;
 											}
 
@@ -454,13 +467,12 @@
 											
 
 											var j = 0, tid = p.tileID;
-											while(j < pieceRules.numSpacesPerMove){
+											while(j < mvlen){
 												if((tid % y) != (y-1)){
 													destTileID = tid + 1;//set allowable move
 													tid = destTileID;
 													this.allowedMoves.push(destTileID);
-													//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
-												}else{ j = pieceRules.numSpacesPerMove; }
+												}else{ j = mvlen; }
 												j++;
 											}
 
@@ -471,13 +483,12 @@
 
 
 											var j = 0, tid = p.tileID;
-											while(j < pieceRules.numSpacesPerMove){
+											while(j < mvlen){
 												if(tid <= ((x*y)-x)-1 && (tid % y) != (y-1)){
 													destTileID = tid + y + 1;//set allowable move
 													tid = destTileID;
 													this.allowedMoves.push(destTileID);
-													//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
-												}else{ j = pieceRules.numSpacesPerMove; }
+												}else{ j = mvlen; }
 												j++;
 											}
 
@@ -487,10 +498,6 @@
 										console.error("unknown move direction found! tried: " + dirs[i]);
 										//throw new Problem("bad move detected");
 									
-								}
-								if(destTileID !== undefined){
-									//draw Move at destTileID
-									//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
 								}
 
 								//reset destTileID for next loop pass
@@ -502,7 +509,7 @@
 					Player.prototype.movePiece = function(p,destTile){
 						//move the given Piece p to the given destination Tile 
 						
-						//TODO: check the piece's move
+						//validating the piece's move is in canvasClick!
 
 						//clearPiece of old tileID
 						p.clearPiece(p.tileID);
@@ -762,9 +769,16 @@
 						//clear the tile-sized space where the piece would normally be drawn
 						ctx.clearRect(info.x,info.y,board.tileWidth,board.tileHeight);
 
-						//TODO: check for other pieces that might be on the same Tile too!
-							//is this even important? in some contexts, it could be
-							//logic: if otherPieces, then redraw them here?
+						//check for other pieces that might be on the same Tile, and redraw them
+							var allPcsHere = getPieces(info.id);
+							if( allPcsHere.length > 1 ){
+								for(var i=0;i<allPcsHere.length;i++){
+									if(this.id != allPcsHere[i].id){
+										//redraw this one piece, unselected
+										allPcsHere[i].drawPiece(false);
+									}
+								}
+							}
 					}
 				}//end clearPiece fn
 
