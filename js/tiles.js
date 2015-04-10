@@ -73,7 +73,7 @@
 						pieces: "pieces",
 						moves: "moves"
 					}
-					,boardColors: ["#a00","#222"]
+					,boardColors: ["#7c5236","#111"]
 				};
 
 			//our MAIN()
@@ -81,7 +81,7 @@
 
 				//create Board (constructor makes Tile set)
 				//display Board
-					var myboard = new Board(7,7,50,50);
+					var myboard = new Board(8,8,80,80);
 
 					var p1 = new Player(0);
 					
@@ -214,10 +214,18 @@
 						if(player.selectedPiece){
 							//TODO: change this IF to check the available moves
 							if(player.selectedPiece.tileID != theTile.id){
-								//move
-								movestr = "moving piece from Tile id:" + player.selectedPiece.tileID + "\tto Tile id: " + theTile.id;
-								player.movePiece(player.selectedPiece,theTile);
+								if(player.allowedMoves.indexOf(theTile.id) > -1 ){
+									//move is legit, move the piece!
+									hideDialog();//hide error message if still visible
+									movestr = "moving piece from Tile id:" + player.selectedPiece.tileID + "\tto Tile id: " + theTile.id;
+									player.movePiece(player.selectedPiece,theTile);
+								}else{
+									//move is outside allowed move set! NO MOVE FOR YOU
+									movestr = "tile " + theTile.id + "\tis outside the allowed move set!";
+									showDialog("You can't move that way! Try again!");
+								}
 							}else{ 
+								hideDialog();//hide user messaging
 								player.deselectPiece(thePiece);
 								thePiece.drawPiece(false);
 								movestr = "deselecting! (can't move piece to same Tile)"; 
@@ -569,7 +577,7 @@
 							//var rgb = tileID %2 == 1 ? getRGBFromHexColor(invertHexColor(color)) : getRGBFromHexColor(invertHexColor(offcolor));
 							//ctx.fillStyle = "rgba("+rgb[0]+","+rgb[1]+","+rgb[2]+","+0.3+")";
 
-						ctx.fillStyle = "rgba(255,255,255,0.3)";
+						ctx.fillStyle = "rgba(255,255,255,0.5)";
 						//intuitive x value: (tileID / board.numTilesY>>0)*board.tileWidth
 						//intuitive y value: (tileID / board.numTilesX>>0)*board.tileHeight
 						ctx.fillRect(x,y,board.tileWidth,board.tileHeight);
@@ -820,7 +828,7 @@
 					this.features = features;
 					this.tileSet = [];
 
-										if(this.tileCount <= 100){
+					if(this.tileCount <= 100){
 						this.makeTiles();
 					}else{
 						if(window.confirm("This Board is going to be large, a total of " + this.tileCount + " pieces!\nContinue?")){
