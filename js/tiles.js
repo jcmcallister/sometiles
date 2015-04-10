@@ -37,23 +37,31 @@
 					rules:{
 						circle:{
 							directions: "r,up,l,d",
-							numSpacesPerMove: 1
+							numSpacesPerMove: 1,
+							piecesPerPlayer: 4,
+							startingPositions: [[0,0],[2,3], [0,7],[2,4]]//structured order = numeric xy coords, random places on half board = -1
 							//TODO: any other data fields to be manipulated in gameplay go here!
 						},
 						square:{
 							directions: "ur,ul,dl,dr",
-							numSpacesPerMove: -1//-1 to codify N spaces? any # of spaces allowable
+							numSpacesPerMove: -1,//-1 or '*' to codify max() spaces
+							piecesPerPlayer: 1
+							,startingPositions: -1
 							//TODO: will be read in from DB same as above, any other data fields here (UNIFORM with above PieceType rules)
 						},
 						knight:{
 							imgpath: "img/knight.png",
 							directions: "*",
 							numSpacesPerMove: 3
+							,piecesPerPlayer: 2
+							,startingPositions: -1
 						},
 						doge:{
 							imgpath: "img/doge.png",
 							directions: "*",
 							numSpacesPerMove: 1
+							,piecesPerPlayer: 2
+							,startingPositions: -1
 						}
 
 					}
@@ -74,6 +82,8 @@
 						moves: "moves"
 					}
 					,boardColors: ["#7c5236","#111"]
+					,turn : null
+					//,Goal: //TODO PRIORITY: get a simple goal mechanic working
 				};
 
 			//our MAIN()
@@ -84,24 +94,63 @@
 					var myboard = new Board(8,8,80,80);
 
 					var p1 = new Player(0);
+					var p2 = new Player(1, "#b00", "#d33");
 					
+				//dynamically create the right amount of Player Pieces from Piece Type rules
+					var pcTypes = getAllPieceTypes(), pcInfo, pcLoc, pcMin, pcMax;
+					for(var pl=0;pl<SomeTiles.Players.length;pl++){
+						for(var i=0; i<pcTypes.length;i++){
+							pcInfo = getPieceTypeInfo(pcTypes[i]);
+							for(var k=0;k<pcInfo.piecesPerPlayer;k++){
 
-				//create Pieces(playerID?)
-				//attach Pieces to Tiles
-				//assign Pieces to Tiles
-					p1.addPiece(0,2,"doge");
+								if(typeof pcInfo.startingPositions === "number"){
+									//it's random!
+									if(pl==0){
+										pcMin = 0;
+										pcMax = ((myboard.numTilesX*myboard.numTilesY)/2)-1;
+									}else{
+										pcMin = ((myboard.numTilesX*myboard.numTilesY)/2);
+										pcMax = (myboard.numTilesX*myboard.numTilesY) -1;
+									}
+									pcLoc = Math.floor(Math.random() * (pcMax - pcMin)) + pcMin ;
+									SomeTiles.Players[pl].addPiece(pcLoc,pcTypes[i]);
+								}else{
+									//the startingPositions are structured in a 2d array!
+									//apply the simple coordinates to the player, and transpose them for p2's side of the board
+									//for(var j=0;j<pcInfo.startingPositions.length;j++){
+										//pcInfo.startingPositions[j]: x,y coord pair
+									if(pcInfo.startingPositions.length == pcInfo.piecesPerPlayer){
+										//0: x-coord, 1: y-coord
+										var myx = pcInfo.startingPositions[k][0];
+										var myy = pcInfo.startingPositions[k][1];
+										var bx = myboard.numTilesX;
+										var by = myboard.numTilesY;
 
-				//make set of Pieces for given player
-					p1.addPiece(0,10,"circle");
-					p1.addPiece(0,34,"circle");
-					p1.addPiece(0,44,"square");
+										if(pl==0){
+											pcLoc = (myx*by) + myy;// x + y
+										}else{
+											pcLoc = ((bx-1)-myx)*by+myy;//n-1-x + y
+										}
+										SomeTiles.Players[pl].addPiece(pcLoc,pcTypes[i]);
+									}
+									
+								}
+							
+								
+							}//end loop amount of this piece type per player
+						}//end loop for this piece type
+						SomeTiles.Players[pl].drawPieces();
+					}//end loop for each Player
 
-				//a piece from an image
-					p1.addPiece(0,20,"knight");
 
-				//display Pieces
+				//which Player goes first?
+				SomeTiles.turn = Math.round(Math.random());
+				showDialog("Player " + SomeTiles.turn + " goes first!")
+
+				//TODO: confirm that player number SomeTiles.turn is going first
+
 				//draw ALL pieces
-					p1.drawPieces();
+					//p1.drawPieces();
 
 				//add Mouse listener
 					//must be canvas with highest z-index on page
@@ -109,6 +158,10 @@
 					
 					var canvas = topLayerCanvas || document.getElementsByTagName("canvas")[0];
 					canvas.addEventListener("click", canvasClick, false);
+
+				//TODO: write switchTurn() and switch turns until a Goal condition is met
+					//hotseat local games only!
+
 			}
 
 			function getTopLayerCanvas(){
@@ -296,13 +349,13 @@
 
 			//START -- Player Functions
 				//Player
-					function Player(num){
+					function Player(num, color, colorSelect){
 						this.number = num;
 						this.Pieces = [];
 						//this.PieceImage = '';
 						//this.PieceShape = "circle"; //set of shapes: (circle, triangle)
-						this.PieceColor = "#ddd";//hex or rgba for canvas contexts
-						this.PieceColorSelect = "#777";//hex or rgba for canvas contexts
+						this.PieceColor = color || "#ddd";//hex or rgba for canvas contexts
+						this.PieceColorSelect = colorSelect || "#777";//hex or rgba for canvas contexts
 
 						this.selectedPiece;//normally a piece ID
 						this.allowedMoves = [];//a set of Tile IDs for moves allowed for selected pieces
@@ -526,18 +579,12 @@
 
 					}
 
-					Player.prototype.addPiece = function(playernum, tileID, pieceType){
-						this.Pieces.push(new Piece(playernum, tileID, pieceType));
+					Player.prototype.addPiece = function(tileID, pieceType){
+						var me= this;
+						me.Pieces.push(new Piece(me.number, tileID, pieceType));
 					}
 
-					Player.prototype.addPieceThenDraw = function(playernum, tileID, pieceType){
-						var newp = new Piece(playernum, tileID, pieceType);
-						this.Pieces.push(newp);
-						newp.drawPiece(false);
-
-					}
-
-
+					
 					Player.prototype.removePiece = function(tileID){
 						//grab piece at given Tile ID, remove it from the Player's piece array and return it
 						var rmPiece = getPiece(tileID);
