@@ -43,7 +43,7 @@
 							,moves:[
 								{
 									directions: "r,up,l,d"
-									,distanceVectors: [1] //these are options the player could make use of, see the Knight piece below
+									,distanceOptions: [1] //these are options the player could make use of, see the Knight piece below
 									,mustGoMax: false
 									,noclip: false //if noclip, the Piece floats through adjacent pieces from src to dest
 								}
@@ -60,7 +60,7 @@
 							,moves:[
 								{
 									directions: "ur,ul,dl,dr"
-									,distanceVectors: [-1]
+									,distanceOptions: [-1]
 									,mustGoMax: false
 									,noclip: false 
 								}
@@ -76,13 +76,16 @@
 							,moves:[
 								{
 									directions: "r,up,l,d"
-									,distanceVectors: [1,2] //move options the player could choose, "up 1 over 2" versus "up 2 over 1"
-									,mustGoMax: false
-									,noclip: false //if noclip, the Piece floats through adjacent pieces from src to dest
+									,distanceOptions: [1,2] //move options the player could choose, "up 1 over 2" versus "up 2 over 1"
+									,mustGoMax: true
+									,noclip: true //if noclip, the Piece floats through adjacent pieces from src to dest & the only collision check occurs at dest.
+									//if !noclip, the Piece must check if a Piece is blocking the path from currentTileID to destTileID
 								},
 								{
 									directions: "l,r"
-									,distanceVectors: [ 2,1 ] //the complement of the above distance vectors of the first move
+									,distanceOptions: [ 2,1 ] //the complement of the above distance vectors of the first move
+									,mustGoMax: true
+									,noclip:true
 								}
 							]
 						},
@@ -95,11 +98,11 @@
 							,moves:[
 								{
 									directions: "*"
-									,distanceVectors: [1] //these are options the player could make use of, see the Knight piece below
+									,distanceOptions: [1] //these are options the player could make use of, see the Knight piece below
 									,mustGoMax: false
 									,noclip: false //if noclip, the Piece floats through adjacent pieces from src to dest
 								}
-							] 
+							]
 						}
 
 					}
@@ -601,6 +604,175 @@
 
 						}//end loop
 					}
+
+					Player.prototype.validateMove = function(moves, currTID, moveNum, direction){
+						var destTileID;
+						switch(direction){
+							case "r":
+								if(currTID <= ((x*y)-x)-1){
+									var j = 0, tid = currTID;
+
+									while(j < mvlen){
+										if(tid <= ((x*y)-x)-1){
+											destTileID = tid + b.numTilesY;//set allowable move
+											tid = destTileID;
+											this.allowedMoves.push(destTileID);
+											//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
+										}else{ j = mvlen; }
+										j++;
+									}
+
+								}
+								break;
+							case "ur":
+								if(currTID <= ((x*y)-x)-1 && (currTID % y) > 0 ){
+									
+									var j = 0, tid = currTID;
+									while(j < mvlen){
+										if(tid <= ((x*y)-x)-1 && (tid % y) > 0 ){
+											destTileID = tid + b.numTilesY-1;//set allowable move
+											tid = destTileID;
+											this.allowedMoves.push(destTileID);
+										}else{ j = mvlen; }
+										j++;
+									}
+
+
+								}
+								break;
+							case "up":
+								if(currTID % y > 0){
+									var j = 0, tid = currTID;
+									while(j < mvlen){
+										if(tid % y > 0){
+											destTileID = j==0 ? tid - 1 : destTileID - 1;//set allowable move
+											tid = destTileID;
+											this.allowedMoves.push(destTileID);
+										}else{ j = mvlen; }
+										j++;
+									}
+								}
+								break;
+							case "ul":
+								if(currTID >= y && currTID % y > 0){
+
+
+									var j = 0, tid = currTID;
+									while(j < mvlen){
+										if(tid >= y && tid % y > 0){
+											destTileID = (tid - y) - 1;//set allowable move
+											tid = destTileID;
+											this.allowedMoves.push(destTileID);
+										}else{ j = mvlen; }
+										j++;
+									}
+
+
+								}
+								break;
+							case "l":
+								if(currTID >= y){
+
+									var j = 0, tid = currTID;
+									while(j < mvlen){
+										if(tid >= y){
+											destTileID = tid - y;//set allowable move
+											tid = destTileID;
+											this.allowedMoves.push(destTileID);
+										}else{ j = mvlen; }
+										j++;
+									}
+
+								}
+								break;
+							case "dl":
+								if(currTID >= y && (currTID % y) != (y-1)){
+									
+
+
+									var j = 0, tid = currTID;
+									while(j < mvlen){
+										if(tid >= y && (tid % y) != (y-1)){
+											destTileID = (tid - y) + 1;//set allowable move
+											tid = destTileID;
+											this.allowedMoves.push(destTileID);
+										}else{ j = mvlen; }
+										j++;
+									}
+
+								}
+								break;
+							case "d":
+								if((currTID % y) != (y-1)){
+									
+
+									var j = 0, tid = currTID;
+									while(j < mvlen){
+										if((tid % y) != (y-1)){
+											destTileID = tid + 1;//set allowable move
+											tid = destTileID;
+											this.allowedMoves.push(destTileID);
+										}else{ j = mvlen; }
+										j++;
+									}
+
+								}
+								break;
+							case "dr":
+								if(currTID <= ((x*y)-x)-1 && (currTID % y) != (y-1)){
+
+
+									var j = 0, tid = currTID;
+									while(j < mvlen){
+										if(tid <= ((x*y)-x)-1 && (tid % y) != (y-1)){
+											destTileID = tid + y + 1;//set allowable move
+											tid = destTileID;
+											this.allowedMoves.push(destTileID);
+										}else{ j = mvlen; }
+										j++;
+									}
+
+								}
+								break;
+							default:
+								console.error("unknown move direction found! tried: " + direction);
+								//throw new Problem("bad move detected");
+							
+						}
+					}
+
+					Player.prototype.getValidMovesMV = function(p){
+						var pieceRules = getPieceTypeInfo(p.type);
+						var m = pieceRules.moves;
+						var mydirs = pieceRules.directions;
+						if(mydirs == "*"){
+							mydirs = "r,ur,up,ul,l,dl,d,dr";
+						}
+						var dirs = mydirs.split(",");
+						var destTileID, b= getBoard(), x=b.numTilesX, y=b.numTilesY;
+
+
+						for(var z=0;z<m.length;z++ ){
+							var mvlen = pieceRules.numSpacesPerMove;
+
+							if(mvlen == "*" || mvlen == -1){
+								mvlen = Math.max(x,y);
+							}
+
+							for(var i=0;i<dirs.length;i++){
+								//TODO? do moves need a class/object to handle all these Move fns
+								//draw each move on the moves canvas
+									//check if valid move using Board.numTilesX/Y and p.tileID for proximity
+									//movement in simple vectors using pieceRules.numSpacesPerMove
+									this.validateMove(m, p.tileID, z, dirs[i]);
+
+									//reset destTileID for next loop pass
+									destTileID = undefined;
+
+							}//end loop
+						}//loop for each distanceOption
+					}
+
 					
 					Player.prototype.movePiece = function(p,destTile){
 						//move the given Piece p to the given destination Tile 
