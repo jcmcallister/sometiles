@@ -36,34 +36,70 @@
 					types: ["circle","square", "knight", "doge"],
 					rules:{
 						circle:{
-							directions: "r,up,l,d",
-							numSpacesPerMove: 1,
+							directions: "r,up,l,d",//TODO: deprecate
+							numSpacesPerMove: 1, //TODO: deprecate in favor of this.moves[0]
 							piecesPerPlayer: 4,
 							startingPositions: [[0,0],[2,3], [0,7],[2,4]]//structured order = numeric xy coords, random places on half board = -1
+							,moves:[
+								{
+									directions: "r,up,l,d"
+									,distanceVectors: [1] //these are options the player could make use of, see the Knight piece below
+									,mustGoMax: false
+									,noclip: false //if noclip, the Piece floats through adjacent pieces from src to dest
+								}
+							] 
 							//TODO Priority: multi-vector movement e.g. Knights in Chess, or double-jumps in Checkers
-							//TODO: leapfrog piece captures for Checkers. HOW TO ABSTRACT THAT?
+							//TODO: leapfrog piece captures for Checkers: OUR FIRST FEATURE/MECHANIC!!. HOW TO ABSTRACT THAT?
 							//TODO: any other data fields to be manipulated in gameplay go here!
 						},
 						square:{
-							directions: "ur,ul,dl,dr",
+							directions: "ur,ul,dl,dr",//boooo
 							numSpacesPerMove: -1,//-1 or '*' to codify max() spaces
 							piecesPerPlayer: 1
 							,startingPositions: -1
+							,moves:[
+								{
+									directions: "ur,ul,dl,dr"
+									,distanceVectors: [-1]
+									,mustGoMax: false
+									,noclip: false 
+								}
+							] 
 							//TODO: will be read in from DB same as above, any other data fields here (UNIFORM with above PieceType rules)
 						},
 						knight:{
 							imgpath: "img/knight.png",
-							directions: "*",
-							numSpacesPerMove: 3
+							directions: "*",//booooo!!!
+							numSpacesPerMove: 3//REMOVE ME WHEN multivectors work!
 							,piecesPerPlayer: 2
 							,startingPositions: -1
+							,moves:[
+								{
+									directions: "r,up,l,d"
+									,distanceVectors: [1,2] //move options the player could choose, "up 1 over 2" versus "up 2 over 1"
+									,mustGoMax: false
+									,noclip: false //if noclip, the Piece floats through adjacent pieces from src to dest
+								},
+								{
+									directions: "l,r"
+									,distanceVectors: [ 2,1 ] //the complement of the above distance vectors of the first move
+								}
+							]
 						},
 						doge:{
 							imgpath: "img/doge.png",
-							directions: "*",
-							numSpacesPerMove: 1
+							directions: "*",//rm this
+							numSpacesPerMove: 1//rm when multvect moves done
 							,piecesPerPlayer: 2
 							,startingPositions: -1
+							,moves:[
+								{
+									directions: "*"
+									,distanceVectors: [1] //these are options the player could make use of, see the Knight piece below
+									,mustGoMax: false
+									,noclip: false //if noclip, the Piece floats through adjacent pieces from src to dest
+								}
+							] 
 						}
 
 					}
@@ -99,6 +135,7 @@
 					var p2 = new Player(1, "#b00", "#d33");
 					
 				//dynamically create the right amount of Player Pieces from Piece Type rules
+				//TODO: abstract this into a populateBoard method
 					var pcTypes = getAllPieceTypes(), pcInfo, pcLoc, pcMin, pcMax;
 					for(var pl=0;pl<SomeTiles.Players.length;pl++){
 						for(var i=0; i<pcTypes.length;i++){
@@ -147,7 +184,7 @@
 
 				//which Player goes first?
 				SomeTiles.turn = Math.round(Math.random());
-				showDialog("Player " + SomeTiles.turn + " goes first!")
+				showDialog("Player " + (SomeTiles.turn+1) + " goes first!")
 
 				//TODO: confirm that player number SomeTiles.turn is going first
 
@@ -411,7 +448,11 @@
 							mydirs = "r,ur,up,ul,l,dl,d,dr";
 						}
 						var dirs = mydirs.split(",");
-						var destTileID, b= getBoard(), x=b.numTilesX, y=b.numTilesY, mvlen = pieceRules.numSpacesPerMove;
+						var destTileID, b= getBoard(), x=b.numTilesX, y=b.numTilesY;
+
+
+						//for( all vectors per move )
+						var mvlen = pieceRules.numSpacesPerMove;
 
 						if(mvlen == "*" || mvlen == -1){
 							mvlen = Math.max(x,y);
@@ -620,7 +661,7 @@
 			//START -- Move Functions
 
 				function drawMove(tileID, x,y){
-					if(tileID === undefined && SomeTiles.debug){ console.warn("Tile ID needed for drawMove!"); return; }
+					if(tileID === undefined && SomeTiles.debug){ console.warn("Tile ID needed for drawMove!"); console.trace(); return; }
 					var board = getBoard();
 					var canvas = document.getElementById(SomeTiles.c.moves) || document.getElementsByTagName("canvas")[0];
 
