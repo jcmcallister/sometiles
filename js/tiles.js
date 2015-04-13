@@ -131,7 +131,7 @@
 					
 				//dynamically create the right amount of Player Pieces from Piece Type rules
 				//TODO: abstract this into a populateBoard method
-					var pcTypes = getAllPieceTypes(), pcInfo, pcLoc, pcMin, pcMax;
+					var pcTypes = getAllPieceTypes(), pcInfo, pcLoc, pcMin, pcMax, tidList = [];
 					for(var pl=0;pl<SomeTiles.Players.length;pl++){
 						for(var i=0; i<pcTypes.length;i++){
 							pcInfo = getPieceTypeInfo(pcTypes[i]);
@@ -147,7 +147,13 @@
 										pcMax = (myboard.numTilesX*myboard.numTilesY) -1;
 									}
 									pcLoc = Math.floor(Math.random() * (pcMax - pcMin)) + pcMin ;
+									while(_.indexOf(tidList,pcLoc) >= 0){
+										//no duplicate pieces overlaid!
+										pcLoc = Math.floor(Math.random() * (pcMax - pcMin)) + pcMin ;
+									}
+									
 									SomeTiles.Players[pl].addPiece(pcLoc,pcTypes[i]);
+									tidList.push(pcLoc);
 								}else{
 									//the startingPositions are structured in a 2d array!
 									//apply the simple coordinates to the player, and transpose them for p2's side of the board
@@ -166,6 +172,7 @@
 											pcLoc = ((bx-1)-myx)*by+myy;//n-1-x + y
 										}
 										SomeTiles.Players[pl].addPiece(pcLoc,pcTypes[i]);
+										tidList.push(pcLoc);
 									}
 									
 								}
@@ -650,6 +657,7 @@
 									var pcType = getPieceTypeInfo(p.type);
 									if(pcType.hasOwnProperty('capture') && pcType.capture !== undefined){
 										//TODO: more checks here to confirm validity of cap method!
+
 									}
 								}else{
 									//friendly piece detected!
