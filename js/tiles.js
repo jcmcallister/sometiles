@@ -70,7 +70,11 @@
 									,mustGoMax: false
 									,noclip: false 
 								}
-							] 
+							],
+							capture: {
+								mechanic: "collide",
+								type: "normal_move"
+							} 
 							//TODO: will be read in from DB same as above, any other data fields here (UNIFORM with above PieceType rules)
 						},
 						knight:{
@@ -91,7 +95,11 @@
 									,mustGoMax: true
 									,noclip:true
 								}
-							]
+							],
+							capture: {
+								mechanic: "collide",
+								type: "normal_move"
+							}
 						},
 						doge:{
 							imgpath: "img/doge.png",
@@ -104,7 +112,11 @@
 									,mustGoMax: true
 									,noclip: false //if noclip, the Piece floats through adjacent pieces from src to dest
 								}
-							]
+							],
+							capture: {
+								mechanic: "collide",
+								type: "normal_move"
+							}
 						}
 
 					}
