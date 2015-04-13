@@ -179,6 +179,9 @@
 
 				//which Player goes first?
 				SomeTiles.turn = Math.round(Math.random());
+				//set the first turn
+				SomeTiles.Players[SomeTiles.turn].isTurn = true;
+
 				showDialog("Player " + (SomeTiles.turn+1) + " goes first!");
 
 				//TODO: confirm that player number SomeTiles.turn is going first
@@ -193,7 +196,8 @@
 					var canvas = topLayerCanvas || document.getElementsByTagName("canvas")[0];
 					canvas.addEventListener("click", canvasClick, false);
 
-				//TODO: write switchTurn() and switch turns until a Goal condition is met
+				//switchTurn() call inside of movePiece(), should be in any action function that consumes or finishes a turn  
+				//TODO: and switch turns until a Goal condition is met
 					//hotseat local games only!
 
 			}
@@ -394,10 +398,20 @@
 						this.selectedPiece;//normally a piece ID
 						this.allowedMoves = [];//a set of Tile IDs for moves allowed for selected pieces
 
+						this.isTurn = false;
+
 						SomeTiles.Players.push(this);
 					}
 
 					Player.prototype.selectPiece = function(p){
+						//HOTSEAT: check turns!
+						if(isTurnOf(p.playerNum) == false){
+							showDialog("It's not Player " + (p.playerNum+1) + "'s turn! Give Player " + (Math.abs(p.playerNum-1)+1) + " the controls!");
+							return;
+						}
+
+
+
 						this.selectedPiece = p;
 						p.drawPiece(true);//redraw in same position
 
@@ -688,6 +702,20 @@
 
 						//an old impl'n of this re-drew the whole board + pieces on every pass. this is WORTH IT!
 
+						//on successful Move, change player turn!
+						switchTurns();
+
+					}
+
+					function switchTurns(){
+						SomeTiles.Players[SomeTiles.turn].isTurn = false;
+						SomeTiles.turn = (Math.abs(SomeTiles.turn-1));
+						SomeTiles.Players[SomeTiles.turn].isTurn = true;
+						showDialog("Player " + (SomeTiles.turn+1) + "'s turn!");
+					}
+
+					function isTurnOf(pnum){
+						return SomeTiles.Players[pnum].isTurn;
 					}
 
 					Player.prototype.addPiece = function(tileID, pieceType){
