@@ -184,8 +184,6 @@
 
 				showDialog("Player " + (SomeTiles.turn+1) + " goes first!");
 
-				//TODO: confirm that player number SomeTiles.turn is going first
-
 				//draw ALL pieces
 					//p1.drawPieces();
 
@@ -197,7 +195,7 @@
 					canvas.addEventListener("click", canvasClick, false);
 
 				//switchTurn() call inside of movePiece(), should be in any action function that consumes or finishes a turn  
-				//TODO: and switch turns until a Goal condition is met
+				//TODO: switch turns until a Goal condition is met
 					//hotseat local games only!
 
 			}
@@ -702,6 +700,8 @@
 
 						//an old impl'n of this re-drew the whole board + pieces on every pass. this is WORTH IT!
 
+						//TODO: goal conditions check HERE!
+						//if(goal not met), keep going, else declare winner and do voting stuff
 						//on successful Move, change player turn!
 						switchTurns();
 
