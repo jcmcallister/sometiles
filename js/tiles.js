@@ -37,7 +37,7 @@
 					rules:{
 						circle:{
 							piecesPerPlayer: 4,
-							startingPositions: [[0,0],[2,3], [0,7],[2,4]]//structured order = numeric xy coords, random places on half board = -1
+							startingPositions: [[0,0],[3,3], [0,7],[3,4]]//structured order = numeric xy coords, random places on half board = -1
 							,moveVectors:[
 								{
 									directions: "r,up,l,d"
@@ -45,7 +45,13 @@
 									,mustGoMax: false
 									,noclip: false //if noclip, the Piece floats through adjacent pieces from src to dest
 								}
-							] 
+							],
+							capture: {
+								mechanic: "collide",
+								type: "normal_move"
+							}
+
+							//new Capture("collide","normal_move","circle")//circles are boring! 
 							//TODO Priority: multi-vector movement e.g. Knights in Chess, or double-jumps in Checkers
 							//TODO: leapfrog piece captures for Checkers: OUR FIRST FEATURE/MECHANIC!!. HOW TO ABSTRACT THAT?
 							//TODO: any other data fields to be manipulated in gameplay go here!
@@ -116,7 +122,7 @@
 					}
 					,boardColors: ["#7c5236","#111"]
 					,turn : null
-					//,Goal: //TODO PRIORITY: get a simple goal mechanic working
+					//,Goal: //TODO PRIORITY: get a simple goal ic working
 				};
 
 			//our MAIN()
@@ -288,7 +294,7 @@
 				//find the Tile // Piece related to the 
 					//using the Math involved in Tile creation, we get an easy rect
 				var theTile = getTileFromXY(x,y), thePiece = getPiece(theTile.id), p;
-				var player = SomeTiles.Players[SomeTiles.turn];
+				var player = thePlayer();
 				var movestr = "NO piece on Tile id = " + theTile.id;
 
 				if(thePiece === undefined && player.selectedPiece === undefined){
@@ -299,41 +305,39 @@
 					return;
 				}
 
-				//TODO Priority: FIX THIS FOR MULTIPLE PLAYERS ONCE CODE IS IN PLACE
-				
-					//select or move the piece in the clicked position!
+				//select or move the piece in the clicked position!
 
-					if(thePiece && !player.selectedPiece){
-						//select
-						player.selectPiece(thePiece);
-						movestr = "selecting piece on Tile id:" + theTile.id;
-					}else{
-						if(player.selectedPiece){
-							if(player.selectedPiece.tileID != theTile.id){
+				if(thePiece && !player.selectedPiece){
+					//select
+					player.selectPiece(thePiece);
+					movestr = "selecting piece on Tile id:" + theTile.id;
+				}else{
+					if(player.selectedPiece){
+						if(player.selectedPiece.tileID != theTile.id){
 
-								//check the available moves
-								if(player.allowedMoves.indexOf(theTile.id) > -1 ){
-									//move is legit, move the piece!
-									hideDialog();//hide error message if still visible
-									movestr = "moving piece from Tile id:" + player.selectedPiece.tileID + "\tto Tile id: " + theTile.id;
-									player.movePiece(player.selectedPiece,theTile);
-								}else{
-									//move is outside allowed move set! NO MOVE FOR YOU
-									movestr = "tile " + theTile.id + "\tis outside the allowed move set!";
-									showDialog("You can't move that way! Try again!");
-								}
-							}else{ 
-								hideDialog();//hide user messaging
-								player.deselectPiece(thePiece);
-								thePiece.drawPiece(false);
-								movestr = "deselecting! (can't move piece to same Tile)"; 
+							//check the available moves
+							if(player.allowedMoves.indexOf(theTile.id) > -1 ){
+								//move is legit, move the piece!
+								hideDialog();//hide error message if still visible
+								movestr = "moving piece from Tile id:" + player.selectedPiece.tileID + "\tto Tile id: " + theTile.id;
+								player.movePiece(player.selectedPiece,theTile);
+							}else{
+								//move is outside allowed move set! NO MOVE FOR YOU
+								movestr = "tile " + theTile.id + "\tis outside the allowed move set!";
+								showDialog("You can't move that way! Try again!");
 							}
+						}else{ 
+							hideDialog();//hide user messaging
+							player.deselectPiece(thePiece);
+							thePiece.drawPiece(false);
+							movestr = "deselecting! (can't move piece to same Tile)"; 
 						}
 					}
+				}
 
-					if(SomeTiles.debug){
-						console.log(movestr);
-					}
+				if(SomeTiles.debug){
+					console.log(movestr);
+				}
 
 				
 			}
@@ -364,6 +368,10 @@
 					}
 				}
 				return pieces;
+			}
+
+			function thePlayer(){
+				return SomeTiles.Players[SomeTiles.turn];
 			}
 
 			function getTileFromXY(x,y){
@@ -657,6 +665,20 @@
 									var pcType = getPieceTypeInfo(p.type);
 									if(pcType.hasOwnProperty('capture') && pcType.capture !== undefined){
 										//TODO: more checks here to confirm validity of cap method!
+										
+										//does the capture type work here?
+										if( checkCaptureType(piece,destTile,pcType.capture.type) ){
+											//yes!
+											if(checkCaptureMechanic(piece,destTile,pcType.capture.mechanic)){
+												//does the capture mechanic work here?
+												
+											}
+										}
+
+										//does a capture mechanic apply here?
+										checkCaptureMechanic(pcType.mechanic);
+
+										
 
 									}
 								}else{
@@ -716,9 +738,9 @@
 					}
 
 					function switchTurns(){
-						SomeTiles.Players[SomeTiles.turn].isTurn = false;
+						thePlayer().isTurn = false;
 						SomeTiles.turn = (Math.abs(SomeTiles.turn-1));
-						SomeTiles.Players[SomeTiles.turn].isTurn = true;
+						thePlayer().isTurn = true;
 						showDialog("Player " + (SomeTiles.turn+1) + "'s turn!");
 					}
 
@@ -1259,3 +1281,83 @@
 
 
 			// END  -- Image Functions
+
+
+			//START -- Capture Functions
+
+			function Capture(mech,t,pType,capMove){
+				this.mechanic = mech;
+				this.type = t;
+				this.pieceType = pType;
+				
+				if(typeof capMove !== undefined){
+					this.specialmove = capMove;	
+				}else{
+					this.specialmove;
+				}
+				
+			}
+
+			Capture.prototype.isPossible = function(p){
+				//check the piece and the Capture info to see if a cap is possible right now
+				var player = thePlayer();
+				if( typeMap[this.type]() == true ){
+					//a?
+				}
+			}
+
+
+			Capture.prototype.checkPiece = function(p,targ){
+				//p is the piece being controlled
+				//targ is the target piece
+				var player = thePlayer();
+
+				if( player.allowedMoves.length == 0 ){
+					//we can 
+				}
+
+				var mechMap = {
+					collide : function(r){ return foo },
+					landOnTop : function(r){ return foo },
+					leapfrog : function(r){ return foo }
+				},
+				typeMap = {
+					normal_move : function(r){
+						//if()
+					},
+					special_move : function(r){ return foo },
+					action : function(r){ return foo }
+				},
+				canCapture = false;
+
+
+				if(mechMap[this.mechanic]){
+					//if the mechanic is applicable right now
+					//capture the target!
+				}
+
+			}
+
+			function checkCaptureMechanic(p,targID,capMech){
+				var mechMap = {
+					collide : function(r){ return foo },
+					landOnTop : function(r){ return foo },
+					leapfrog : function(r){ return foo }
+				}, res = false;
+
+			}
+
+
+			function checkCaptureType(p,targID,capType){
+				var typeMap = {
+					normal_move : function(){ 
+						return (_.indexOf(thePlayer().allowedMoves,targID ) >= 0); 
+					},
+					special_move : function(r){ return foo },
+					action : function(r){ return foo }
+				}, res = false;
+
+				return typeMap[capType]();
+
+			}
+			// END  -- Capture Functions
