@@ -28,6 +28,10 @@
 				$("#dialog").addClass("hidden");
 			}
 
+			Player.prototype.updateScore = function(){
+				$("#p"+(this.number+1)+"score").text(this.scoreCount);
+			}
+
 			//START -- Piece Types
 
 				//define movement, actions, shape, etc for this piece type
@@ -412,6 +416,7 @@
 						this.allowedMoves = [];//a set of Tile IDs for moves allowed for selected pieces
 
 						this.isTurn = false;
+						this.scoreCount = 0;
 
 						SomeTiles.Players.push(this);
 					}
@@ -661,25 +666,20 @@
 								piece = destPieces[i];
 								if(piece.playerNum != this.number){
 									//enemy piece detected!
-									//TODO: check the capture type of our piece p to see if we can cap 'em!
 									var pcType = getPieceTypeInfo(p.type);
 									if(pcType.hasOwnProperty('capture') && pcType.capture !== undefined){
-										//TODO: more checks here to confirm validity of cap method!
-										
 										//does the capture type work here?
-										if( checkCaptureType(piece,destTile,pcType.capture.type) ){
-											//yes!
-											if(checkCaptureMechanic(piece,destTile,pcType.capture.mechanic)){
-												//does the capture mechanic work here?
-												
+										if( checkCaptureType(piece,destTile.id,pcType.capture.type) ){
+											
+											//does the capture mechanic work here?
+											if(checkCaptureMechanic(piece, destTile.id, pcType.capture.mechanic)){
+												this.capturePiece(piece,destTile);//GOTEM!
+											}else{
+												res = true;//you're blocked, brah
 											}
+										}else{
+											res = true;//this isn't a cap move, should be treated as an obstacle
 										}
-
-										//does a capture mechanic apply here?
-										checkCaptureMechanic(pcType.mechanic);
-
-										
-
 									}
 								}else{
 									//friendly piece detected!
@@ -697,10 +697,21 @@
 						return res;
 					}
 
-					Player.prototype.capturePiece = function(p,destTile){
-						//check capture type of this piece
+					Player.prototype.capturePiece = function(p,destTile,cap){
+						console.log("piece " + p.id + " just captured the piece at " + destTile.id + "!!!");
+						
+						//remove the piece at destTile.id
+						var victim = this.removePiece(destTile.id);
 
-						//return bool
+						//add to count
+						var pl = thePlayer();
+						pl.scoreCount++;
+						
+						//update the scoreboard
+						pl.updateScore();
+
+						//showDialog("Player " + (SomeTiles.turn+1) + " just captured a " + victim.type + "!");
+
 					}
 
 					
@@ -1340,24 +1351,26 @@
 
 			function checkCaptureMechanic(p,targID,capMech){
 				var mechMap = {
-					collide : function(r){ return foo },
-					landOnTop : function(r){ return foo },
-					leapfrog : function(r){ return foo }
+					collide : function(t){ return (_.indexOf(thePlayer().allowedMoves,t ) >= 0); },
+					landOnTop : function(t){ return foo },
+					leapfrog : function(t){ return foo }
 				}, res = false;
+
+				return mechMap[capMech](targID);
 
 			}
 
 
 			function checkCaptureType(p,targID,capType){
 				var typeMap = {
-					normal_move : function(){ 
-						return (_.indexOf(thePlayer().allowedMoves,targID ) >= 0); 
+					normal_move : function(tid){ 
+						return (_.indexOf(thePlayer().allowedMoves,tid ) >= 0); 
 					},
 					special_move : function(r){ return foo },
 					action : function(r){ return foo }
 				}, res = false;
 
-				return typeMap[capType]();
+				return typeMap[capType](targID);
 
 			}
 			// END  -- Capture Functions
