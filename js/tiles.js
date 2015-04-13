@@ -1364,8 +1364,8 @@
 			function checkCaptureMechanic(p,targID,capMech){
 				var mechMap = {
 					collide : function(t){ return (_.indexOf(thePlayer().allowedMoves,t ) >= 0); },
-					landOnTop : function(t){ return foo },
-					leapfrog : function(t){ return foo }
+					landOnTop : function(t){ return foo },//TODO: decide if is this redundant
+					leapfrog : function(t){ return foo }//TODO priority: for Checkers!
 				}, res = false;
 
 				return mechMap[capMech](targID);
@@ -1378,8 +1378,8 @@
 					normal_move : function(tid){ 
 						return (_.indexOf(thePlayer().allowedMoves,tid ) >= 0); 
 					},
-					special_move : function(r){ return foo },
-					action : function(r){ return foo }
+					special_move : function(r){ return foo },//TODO priority
+					action : function(r){ return foo }//TODO: once actions are in
 				}, res = false;
 
 				return typeMap[capType](targID);
