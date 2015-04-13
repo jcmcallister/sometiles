@@ -147,7 +147,7 @@
 										pcMax = (myboard.numTilesX*myboard.numTilesY) -1;
 									}
 									pcLoc = Math.floor(Math.random() * (pcMax - pcMin)) + pcMin ;
-									while(_.indexOf(tidList,pcLoc) >= 0){
+									while(_.indexOf(tidList,pcLoc) >= 0 && tidList.length < (pcMax-pcMin) ){
 										//no duplicate pieces overlaid!
 										pcLoc = Math.floor(Math.random() * (pcMax - pcMin)) + pcMin ;
 									}
@@ -288,7 +288,7 @@
 				//find the Tile // Piece related to the 
 					//using the Math involved in Tile creation, we get an easy rect
 				var theTile = getTileFromXY(x,y), thePiece = getPiece(theTile.id), p;
-				var player = SomeTiles.Players[0];
+				var player = SomeTiles.Players[SomeTiles.turn];
 				var movestr = "NO piece on Tile id = " + theTile.id;
 
 				if(thePiece === undefined && player.selectedPiece === undefined){
