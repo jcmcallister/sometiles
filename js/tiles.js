@@ -37,10 +37,10 @@
 					rules:{
 						circle:{
 							directions: "r,up,l,d",//TODO: deprecate
-							numSpacesPerMove: 1, //TODO: deprecate in favor of this.moves[0]
+							numSpacesPerMove: 1, //TODO: deprecate in favor of this.moveVectors[0].distanceOptions[0]
 							piecesPerPlayer: 4,
 							startingPositions: [[0,0],[2,3], [0,7],[2,4]]//structured order = numeric xy coords, random places on half board = -1
-							,moves:[
+							,moveVectors:[
 								{
 									directions: "r,up,l,d"
 									,distanceOptions: [1] //these are options the player could make use of, see the Knight piece below
@@ -57,7 +57,7 @@
 							numSpacesPerMove: -1,//-1 or '*' to codify max() spaces
 							piecesPerPlayer: 1
 							,startingPositions: -1
-							,moves:[
+							,moveVectors:[
 								{
 									directions: "ur,ul,dl,dr"
 									,distanceOptions: [-1]
@@ -73,7 +73,7 @@
 							numSpacesPerMove: 3//REMOVE ME WHEN multivectors work!
 							,piecesPerPlayer: 2
 							,startingPositions: -1
-							,moves:[
+							,moveVectors:[
 								{
 									directions: "r,up,l,d"
 									,distanceOptions: [1,2] //move options the player could choose, "up 1 over 2" versus "up 2 over 1"
@@ -95,10 +95,10 @@
 							numSpacesPerMove: 1//rm when multvect moves done
 							,piecesPerPlayer: 2
 							,startingPositions: -1
-							,moves:[
+							,moveVectors:[
 								{
 									directions: "*"
-									,distanceOptions: [1] //these are options the player could make use of, see the Knight piece below
+									,distanceOptions: [1, 3] //these are options the player could make use of, see the Knight piece below
 									,mustGoMax: false
 									,noclip: false //if noclip, the Piece floats through adjacent pieces from src to dest
 								}
@@ -187,7 +187,7 @@
 
 				//which Player goes first?
 				SomeTiles.turn = Math.round(Math.random());
-				showDialog("Player " + (SomeTiles.turn+1) + " goes first!")
+				showDialog("Player " + (SomeTiles.turn+1) + " goes first!");
 
 				//TODO: confirm that player number SomeTiles.turn is going first
 
@@ -410,7 +410,7 @@
 						p.drawPiece(true);//redraw in same position
 
 						//get valid moves for the now-selected Piece p
-						this.getValidMoves(p);
+						this.getValidMovesMV(p);
 						this.showValidMoves();
 						
 
@@ -605,172 +605,191 @@
 						}//end loop
 					}
 
-					Player.prototype.validateMove = function(moves, currTID, moveNum, direction){
-						var destTileID;
-						switch(direction){
-							case "r":
-								if(currTID <= ((x*y)-x)-1){
-									var j = 0, tid = currTID;
+					//Player.prototype.validateMove = function(moves, currTID, moveNum, direction){
+						//given the Move object, currentPieceLocation, max move length, desired direction, and where to store valid tileIDs
+					Player.prototype.validateMovePath = function(theMove, currTID, maxMoveLen, direction){
+						//we do hashes, thanks to dave calhoun @ http://davidbcalhoun.com/2010/is-hash-faster-than-switch-in-javascript/
+						var destTileID,
+						conditionMap = {
+							r: function(tid, w, h){ return (tid <= ((w*h)-w)-1); },
+							ur: function(tid, w, h){ return (tid <= ((w*h)-w)-1 && (tid % h) > 0); },
+							up: function(tid, w, h){ return (tid % h > 0); },
+							ul: function(tid, w, h){ return (tid >= h && tid % h > 0); },
+							l: function(tid, w, h){ return (tid >= h); },
+							dl: function(tid, w, h){ return (tid >= h && (tid % h) != (h-1)); },
+							d: function(tid, w, h){ return (tid % h) != (h-1); },
+							dr: function(tid, w, h){ return (tid <= ((w*h)-w)-1 && (tid % h) != (h-1)); }
+						}, tilePathMap = {
+							r: function(tid,w,h){ return tid+h; },
+							ur: function(tid,w,h){ return tid + h-1; },
+							up: function(tid,w,h){ return tid - 1; },
+							ul: function(tid,w,h){ return (tid - h) - 1; },
+							l: function(tid,w,h){ return (tid - h);},
+							dl: function(tid,w,h){ return (tid - h) + 1;},
+							d: function(tid,w,h){ return tid + 1;},
+							dr: function(tid,w,h){ return tid + h + 1;}
+						}, b = getBoard(), okcount = 0, tmp = [], storage= [], tid = currTID;
+						try{
+							//check for every spot on the path to maxMoveLen
 
-									while(j < mvlen){
-										if(tid <= ((x*y)-x)-1){
-											destTileID = tid + b.numTilesY;//set allowable move
-											tid = destTileID;
-											this.allowedMoves.push(destTileID);
-											//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
-										}else{ j = mvlen; }
-										j++;
-									}
-
+							for(var i = 0; i <maxMoveLen; i++){
+								if(conditionMap[direction](tid,b.numTilesX, b.numTilesY)){
+									//put tilePathMap value into temp storage
+									okcount++;
+									destTileID = tilePathMap[direction](tid,b.numTilesX,b.numTilesY);
+									tmp.push( destTileID );
+									tid = destTileID;
 								}
-								break;
-							case "ur":
-								if(currTID <= ((x*y)-x)-1 && (currTID % y) > 0 ){
-									
-									var j = 0, tid = currTID;
-									while(j < mvlen){
-										if(tid <= ((x*y)-x)-1 && (tid % y) > 0 ){
-											destTileID = tid + b.numTilesY-1;//set allowable move
-											tid = destTileID;
-											this.allowedMoves.push(destTileID);
-										}else{ j = mvlen; }
-										j++;
-									}
+							}
 
-
+							if(theMove.mustGoMax){
+								//necessary because our approach is iterative
+								if(okcount == maxMoveLen){
+									//add the one max tid if we reached it
+									storage.push( tmp.pop() );
 								}
-								break;
-							case "up":
-								if(currTID % y > 0){
-									var j = 0, tid = currTID;
-									while(j < mvlen){
-										if(tid % y > 0){
-											destTileID = j==0 ? tid - 1 : destTileID - 1;//set allowable move
-											tid = destTileID;
-											this.allowedMoves.push(destTileID);
-										}else{ j = mvlen; }
-										j++;
-									}
-								}
-								break;
-							case "ul":
-								if(currTID >= y && currTID % y > 0){
+							}else{
+								//add all tid to storage with no duplicates
+								storage = _.union(storage, tmp );
+							}
 
+							return (storage.length == 0 ? undefined : storage);
 
-									var j = 0, tid = currTID;
-									while(j < mvlen){
-										if(tid >= y && tid % y > 0){
-											destTileID = (tid - y) - 1;//set allowable move
-											tid = destTileID;
-											this.allowedMoves.push(destTileID);
-										}else{ j = mvlen; }
-										j++;
-									}
-
-
-								}
-								break;
-							case "l":
-								if(currTID >= y){
-
-									var j = 0, tid = currTID;
-									while(j < mvlen){
-										if(tid >= y){
-											destTileID = tid - y;//set allowable move
-											tid = destTileID;
-											this.allowedMoves.push(destTileID);
-										}else{ j = mvlen; }
-										j++;
-									}
-
-								}
-								break;
-							case "dl":
-								if(currTID >= y && (currTID % y) != (y-1)){
-									
-
-
-									var j = 0, tid = currTID;
-									while(j < mvlen){
-										if(tid >= y && (tid % y) != (y-1)){
-											destTileID = (tid - y) + 1;//set allowable move
-											tid = destTileID;
-											this.allowedMoves.push(destTileID);
-										}else{ j = mvlen; }
-										j++;
-									}
-
-								}
-								break;
-							case "d":
-								if((currTID % y) != (y-1)){
-									
-
-									var j = 0, tid = currTID;
-									while(j < mvlen){
-										if((tid % y) != (y-1)){
-											destTileID = tid + 1;//set allowable move
-											tid = destTileID;
-											this.allowedMoves.push(destTileID);
-										}else{ j = mvlen; }
-										j++;
-									}
-
-								}
-								break;
-							case "dr":
-								if(currTID <= ((x*y)-x)-1 && (currTID % y) != (y-1)){
-
-
-									var j = 0, tid = currTID;
-									while(j < mvlen){
-										if(tid <= ((x*y)-x)-1 && (tid % y) != (y-1)){
-											destTileID = tid + y + 1;//set allowable move
-											tid = destTileID;
-											this.allowedMoves.push(destTileID);
-										}else{ j = mvlen; }
-										j++;
-									}
-
-								}
-								break;
-							default:
-								console.error("unknown move direction found! tried: " + direction);
-								//throw new Problem("bad move detected");
-							
+						}catch(e){
+							if(SomeTiles.debug){
+								console.error("PROBLEM validatingMovePath" + e + "\ngiven args: " + _.values(arguments) );
+								console.trace();
+							}
 						}
+
+					}
+
+					
+
+					Player.prototype.getMoveFromRelMove = function(initHeading, relDir){
+						//context: you just moved initHeading and want to move relDir. 
+						//ex: if you just moved 'r' and you want to make a 'r', on the board you'll move down (this fn returns 'd')
+						if(initHeading === undefined || relDir === undefined || typeof initHeading != "string" || typeof relDir != "string"){
+							if(SomeTiles.debug){ console.warn("args are wrong!"); console.trace(); }
+							return;
+						}
+						var dirMap = {
+							r: 0,
+							ur: 45,
+							up: 90,
+							ul: 135,
+							l: 180,
+							dl: 225,
+							d: 270,
+							dr: 315
+						},relDirMap = {
+							r: -90,
+							ur:-45,
+							up:0,
+							ul:45,
+							l:90,
+							dl:135,
+							d:180,
+							dr:-135
+						}, res=(dirMap[initHeading] + relDirMap[relDir]);
+
+						if(res >= 360){
+							res-=360;
+						}else if(res < 0){
+							res+= 360;
+						}
+						return (_.invert(dirMap))[res];//returns 'r' if res is 0
+
 					}
 
 					Player.prototype.getValidMovesMV = function(p){
-						var pieceRules = getPieceTypeInfo(p.type);
-						var m = pieceRules.moves;
-						var mydirs = pieceRules.directions;
-						if(mydirs == "*"){
-							mydirs = "r,ur,up,ul,l,dl,d,dr";
-						}
-						var dirs = mydirs.split(",");
-						var destTileID, b= getBoard(), x=b.numTilesX, y=b.numTilesY;
-
-
-						for(var z=0;z<m.length;z++ ){
-							var mvlen = pieceRules.numSpacesPerMove;
-
-							if(mvlen == "*" || mvlen == -1){
-								mvlen = Math.max(x,y);
+						var pieceRules = getPieceTypeInfo(p.type),
+						moves = pieceRules.moveVectors,
+						mydirs, waypoints = {}, goodTiles = [],
+						destTileID, b= getBoard(), x=b.numTilesX, y=b.numTilesY;
+						
+						//for(var mi=0;mi<moves.length;mi++ ){
+							var mi = 0;//only get first step of vector
+							//START -- get valid destination tiles for the FIRST vector
+							mydirs = moves[mi].directions;
+							if(mydirs == "*"){
+								mydirs = "r,ur,up,ul,l,dl,d,dr";
 							}
+							var dirs = mydirs.split(",");
 
-							for(var i=0;i<dirs.length;i++){
-								//TODO? do moves need a class/object to handle all these Move fns
-								//draw each move on the moves canvas
-									//check if valid move using Board.numTilesX/Y and p.tileID for proximity
-									//movement in simple vectors using pieceRules.numSpacesPerMove
-									this.validateMove(m, p.tileID, z, dirs[i]);
+							for(var d = 0;d<dirs.length;d++){
+								var mvOptions = moves[mi].distanceOptions, mvLen;
 
-									//reset destTileID for next loop pass
-									destTileID = undefined;
+								//waypoints.set[d] = d;
 
-							}//end loop
-						}//loop for each distanceOption
+								for(var opti = 0;opti<mvOptions.length;opti++){
+									mvLen = mvOptions[opti];//how far we want to go
+									if(mvLen == "*" || mvLen == -1){
+										mvLen = Math.max(x,y);
+									}
+
+									//given the Move currentPieceLocation, desired move length, desired direction, and where to store valid tileIDs
+									var paths = this.validateMovePath(moves[mi], p.tileID, mvLen, dirs[d]);
+									if(paths !== undefined && paths.length > 0){
+										waypoints[dirs[d]+","+mvLen] = _.compact( paths );
+									}
+
+									//waypoints contains all valid tile IDs for this move vector
+									//console.log("waypoints after validateMovePath():\t" + waypoints);
+
+								}
+								
+							}
+							// END  -- get valid destination tiles for the FIRST vector
+
+						//}//loop for each moveVector
+
+							var keys = _.keys(waypoints);
+							if(keys.length > 0 && moves.length > 1){
+								//if legit moves exist, look at the next move
+								var nextMove = moves[mi+1], nextDir, l;
+								for(var k=0;k<keys.length;k++){
+									var spl = keys[k].split(",");//spl[0] is direction, spl[1] is distance
+									var newdirs = nextMove.directions;
+									if(newdirs == "*"){
+										newdirs = "r,ur,up,ul,l,dl,d,dr";
+									}
+									var dirs = newdirs.split(",");
+									for(l=0;l<dirs.length;l++){
+										nextDir = this.getMoveFromRelMove(spl[0],dirs[l]);
+										//for(var moo=0;moo<nextMove.distanceOptions.length;moo++){
+									
+											//finally, we want to just check the next hop for the complementary distance hops from vector 1
+											//find indexOf current distanceOption in original move
+											var optionIndex = _.indexOf(moves[mi].distanceOptions,parseInt(spl[1]));
+
+											var mvLen = nextMove.distanceOptions[optionIndex];
+											if(SomeTiles.debug){ console.log("just went " + spl[0] + " for "+ spl[1] +", now going " + nextDir + " for " + mvLen); }
+											for(var goo=0;goo<waypoints[keys[k]].length;goo++){
+												
+												var okPath = this.validateMovePath(nextMove, waypoints[keys[k]][goo], mvLen, nextDir);
+												if(SomeTiles.debug){ console.log("is " + dirs[l] + "," + mvLen + " a goodTile? : " + (okPath !== undefined ? okPath.toString() : "nope, undefined")); }
+												goodTiles = _.union(goodTiles, _.compact( okPath ));
+											}
+
+										//}
+
+									}
+									
+								}
+
+								//clean up the outermost waypoints and put the tileID values into allowedMoves
+								this.allowedMoves = _.uniq( _.flatten(_.values(goodTiles)) );
+
+							}else{
+								//clean up the outermost waypoints and put the tileID values into allowedMoves
+								this.allowedMoves = _.uniq( _.flatten(_.values(waypoints)) );
+							}
+							
+						
+
+						
+
 					}
 
 					
@@ -1157,7 +1176,8 @@
 					var canvas = document.getElementById(SomeTiles.c.board) || document.getElementsByTagName("canvas")[0],
 						color = colorarg || SomeTiles.boardColors[0],
 						offcolor = altcolorarg || SomeTiles.boardColors[1],
-						hasColors = color && offcolor;
+						hasColors = color && offcolor, 
+						wmax, hmax;
 
 					if(canvas && canvas.getContext){
 						//fix the canvas bounds to fit the tiles before getting context!
