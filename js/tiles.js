@@ -36,8 +36,6 @@
 					types: ["circle","square", "knight", "doge"],
 					rules:{
 						circle:{
-							directions: "r,up,l,d",//TODO: deprecate
-							numSpacesPerMove: 1, //TODO: deprecate in favor of this.moveVectors[0].distanceOptions[0]
 							piecesPerPlayer: 4,
 							startingPositions: [[0,0],[2,3], [0,7],[2,4]]//structured order = numeric xy coords, random places on half board = -1
 							,moveVectors:[
@@ -53,8 +51,6 @@
 							//TODO: any other data fields to be manipulated in gameplay go here!
 						},
 						square:{
-							directions: "ur,ul,dl,dr",//boooo
-							numSpacesPerMove: -1,//-1 or '*' to codify max() spaces
 							piecesPerPlayer: 1
 							,startingPositions: -1
 							,moveVectors:[
@@ -69,9 +65,7 @@
 						},
 						knight:{
 							imgpath: "img/knight.png",
-							directions: "*",//booooo!!!
-							numSpacesPerMove: 3//REMOVE ME WHEN multivectors work!
-							,piecesPerPlayer: 2
+							piecesPerPlayer: 2
 							,startingPositions: -1
 							,moveVectors:[
 								{
@@ -91,15 +85,13 @@
 						},
 						doge:{
 							imgpath: "img/doge.png",
-							directions: "*",//rm this
-							numSpacesPerMove: 1//rm when multvect moves done
-							,piecesPerPlayer: 2
+							piecesPerPlayer: 2
 							,startingPositions: -1
 							,moveVectors:[
 								{
 									directions: "*"
-									,distanceOptions: [1, 3] //these are options the player could make use of, see the Knight piece below
-									,mustGoMax: false
+									,distanceOptions: [2] //these are options the player could make use of, see the Knight piece below
+									,mustGoMax: true
 									,noclip: false //if noclip, the Piece floats through adjacent pieces from src to dest
 								}
 							]
@@ -444,167 +436,6 @@
 						}
 					}
 
-					Player.prototype.getValidMoves = function(p){
-						var pieceRules = getPieceTypeInfo(p.type);
-						var mydirs = pieceRules.directions;
-						if(mydirs == "*"){
-							mydirs = "r,ur,up,ul,l,dl,d,dr";
-						}
-						var dirs = mydirs.split(",");
-						var destTileID, b= getBoard(), x=b.numTilesX, y=b.numTilesY;
-
-
-						//for( all vectors per move )
-						var mvlen = pieceRules.numSpacesPerMove;
-
-						if(mvlen == "*" || mvlen == -1){
-							mvlen = Math.max(x,y);
-						}
-
-						for(var i=0;i<dirs.length;i++){
-							//TODO? do moves need a class/object to handle all these Move fns
-							//draw each move on the moves canvas
-								//check if valid move using Board.numTilesX/Y and p.tileID for proximity
-								//movement in simple vectors using pieceRules.numSpacesPerMove
-								switch(dirs[i]){
-									case "r":
-										if(p.tileID <= ((x*y)-x)-1){
-											var j = 0, tid = p.tileID;
-
-											while(j < mvlen){
-												if(tid <= ((x*y)-x)-1){
-													destTileID = tid + b.numTilesY;//set allowable move
-													tid = destTileID;
-													this.allowedMoves.push(destTileID);
-													//drawMove(destTileID,b.getTile(destTileID).x,b.getTile(destTileID).y);
-												}else{ j = mvlen; }
-												j++;
-											}
-
-										}
-										break;
-									case "ur":
-										if(p.tileID <= ((x*y)-x)-1 && (p.tileID % y) > 0 ){
-											
-											var j = 0, tid = p.tileID;
-											while(j < mvlen){
-												if(tid <= ((x*y)-x)-1 && (tid % y) > 0 ){
-													destTileID = tid + b.numTilesY-1;//set allowable move
-													tid = destTileID;
-													this.allowedMoves.push(destTileID);
-												}else{ j = mvlen; }
-												j++;
-											}
-
-
-										}
-										break;
-									case "up":
-										if(p.tileID % y > 0){
-											var j = 0, tid = p.tileID;
-											while(j < mvlen){
-												if(tid % y > 0){
-													destTileID = j==0 ? tid - 1 : destTileID - 1;//set allowable move
-													tid = destTileID;
-													this.allowedMoves.push(destTileID);
-												}else{ j = mvlen; }
-												j++;
-											}
-										}
-										break;
-									case "ul":
-										if(p.tileID >= y && p.tileID % y > 0){
-
-
-											var j = 0, tid = p.tileID;
-											while(j < mvlen){
-												if(tid >= y && tid % y > 0){
-													destTileID = (tid - y) - 1;//set allowable move
-													tid = destTileID;
-													this.allowedMoves.push(destTileID);
-												}else{ j = mvlen; }
-												j++;
-											}
-
-
-										}
-										break;
-									case "l":
-										if(p.tileID >= y){
-
-											var j = 0, tid = p.tileID;
-											while(j < mvlen){
-												if(tid >= y){
-													destTileID = tid - y;//set allowable move
-													tid = destTileID;
-													this.allowedMoves.push(destTileID);
-												}else{ j = mvlen; }
-												j++;
-											}
-
-										}
-										break;
-									case "dl":
-										if(p.tileID >= y && (p.tileID % y) != (y-1)){
-											
-
-
-											var j = 0, tid = p.tileID;
-											while(j < mvlen){
-												if(tid >= y && (tid % y) != (y-1)){
-													destTileID = (tid - y) + 1;//set allowable move
-													tid = destTileID;
-													this.allowedMoves.push(destTileID);
-												}else{ j = mvlen; }
-												j++;
-											}
-
-										}
-										break;
-									case "d":
-										if((p.tileID % y) != (y-1)){
-											
-
-											var j = 0, tid = p.tileID;
-											while(j < mvlen){
-												if((tid % y) != (y-1)){
-													destTileID = tid + 1;//set allowable move
-													tid = destTileID;
-													this.allowedMoves.push(destTileID);
-												}else{ j = mvlen; }
-												j++;
-											}
-
-										}
-										break;
-									case "dr":
-										if(p.tileID <= ((x*y)-x)-1 && (p.tileID % y) != (y-1)){
-
-
-											var j = 0, tid = p.tileID;
-											while(j < mvlen){
-												if(tid <= ((x*y)-x)-1 && (tid % y) != (y-1)){
-													destTileID = tid + y + 1;//set allowable move
-													tid = destTileID;
-													this.allowedMoves.push(destTileID);
-												}else{ j = mvlen; }
-												j++;
-											}
-
-										}
-										break;
-									default:
-										console.error("unknown move direction found! tried: " + dirs[i]);
-										//throw new Problem("bad move detected");
-									
-								}
-
-								//reset destTileID for next loop pass
-								destTileID = undefined;
-
-						}//end loop
-					}
-
 					//Player.prototype.validateMove = function(moves, currTID, moveNum, direction){
 						//given the Move object, currentPieceLocation, max move length, desired direction, and where to store valid tileIDs
 					Player.prototype.validateMovePath = function(theMove, currTID, maxMoveLen, direction){
@@ -764,11 +595,11 @@
 											var optionIndex = _.indexOf(moves[mi].distanceOptions,parseInt(spl[1]));
 
 											var mvLen = nextMove.distanceOptions[optionIndex];
-											if(SomeTiles.debug){ console.log("just went " + spl[0] + " for "+ spl[1] +", now going " + nextDir + " for " + mvLen); }
+											if(SomeTiles.debug){ console.log("\tjust went " + spl[0] + " for "+ spl[1] +", now going " + nextDir + " for " + mvLen); }
 											for(var goo=0;goo<waypoints[keys[k]].length;goo++){
 												
 												var okPath = this.validateMovePath(nextMove, waypoints[keys[k]][goo], mvLen, nextDir);
-												if(SomeTiles.debug){ console.log("is " + dirs[l] + "," + mvLen + " a goodTile? : " + (okPath !== undefined ? okPath.toString() : "nope, undefined")); }
+												if(SomeTiles.debug){ console.log("\tis " + dirs[l] + "," + mvLen + " a goodTile? : " + (okPath !== undefined ? okPath.toString() : "nope, undefined")); }
 												goodTiles = _.union(goodTiles, _.compact( okPath ));
 											}
 
@@ -792,8 +623,32 @@
 
 					}
 
+					Player.prototype.isBlocked = function(destTile){
+						//checks destTile to see if there are pieces on top of it, e.g. is it clear?
+						
+						//check move.noclip
+						//check move.mustGoMax
+
+						//return bool
+					}
+
+					Player.prototype.isCapture = function(destTile){
+						//check capture type of this piece
+
+						//return bool
+					}
+
 					
 					Player.prototype.movePiece = function(p,destTile){
+
+						//check for potential blocks
+
+						getPieces();
+
+						if(){
+							showDialog("You're blocked! Try another way or another Piece!");
+						}
+
 						//move the given Piece p to the given destination Tile 
 						
 						//validating the piece's move is in canvasClick!
