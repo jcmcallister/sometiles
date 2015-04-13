@@ -623,16 +623,39 @@
 
 					}
 
-					Player.prototype.isBlocked = function(destTile){
+					Player.prototype.checkMoveDest = function(p, destTile){
 						//checks destTile to see if there are pieces on top of it, e.g. is it clear?
-						
-						//check move.noclip
-						//check move.mustGoMax
+						var res = false, destPieces = getPieces(destTile.id);
 
-						//return bool
+						if(destPieces.length > 0){
+							//check whose pieces they are
+							var piece;
+							for(var i=0;i<destPieces.length;i++){
+								piece = destPieces[i];
+								if(piece.playerNum != this.number){
+									//enemy piece detected!
+									//TODO: check the capture type of our piece p to see if we can cap 'em!
+									var pcType = getPieceTypeInfo(p.type);
+									if(pcType.hasOwnProperty('capture') && pcType.capture !== undefined){
+										//TODO: more checks here to confirm validity of cap method!
+									}
+								}else{
+									//friendly piece detected!
+									res = true;
+								}
+							}
+
+							//check move.noclip
+								//noclip means you can move through (or over) pieces, but not land on them
+								//if landing on top of a piece, check whose pieces they are, and this piece's capture type
+
+							//check move.mustGoMax
+						}
+						
+						return res;
 					}
 
-					Player.prototype.isCapture = function(destTile){
+					Player.prototype.capturePiece = function(p,destTile){
 						//check capture type of this piece
 
 						//return bool
@@ -643,10 +666,9 @@
 
 						//check for potential blocks
 
-						getPieces();
-
-						if(){
+						if(this.checkMoveDest(p,destTile)){
 							showDialog("You're blocked! Try another way or another Piece!");
+							return;
 						}
 
 						//move the given Piece p to the given destination Tile 
