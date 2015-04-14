@@ -606,7 +606,7 @@
 									//given the Move currentPieceLocation, desired move length, desired direction, and where to store valid tileIDs
 									var paths = this.validateMovePath(moves[mi], p.tileID, mvLen, dirs[d]);
 									if(paths !== undefined && paths.length > 0){
-										waypoints[dirs[d]+","+mvLen] = _.compact( paths );
+										waypoints[dirs[d]+","+mvLen] = paths;
 									}
 
 									//waypoints contains all valid tile IDs for this move vector
@@ -644,7 +644,9 @@
 												
 												var okPath = this.validateMovePath(nextMove, waypoints[keys[k]][goo], mvLen, nextDir);
 												if(SomeTiles.debug){ console.log("\tis " + dirs[l] + "," + mvLen + " a goodTile? : " + (okPath !== undefined ? okPath.toString() : "nope, undefined")); }
-												goodTiles = _.union(goodTiles, _.compact( okPath ));
+												if(okPath !== undefined && okPath.length > 0){
+													goodTiles = _.union(goodTiles, okPath );
+												}
 											}
 
 										//}
