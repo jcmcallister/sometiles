@@ -606,6 +606,23 @@
 									//given the Move currentPieceLocation, desired move length, desired direction, and where to store valid tileIDs
 									var paths = this.validateMovePath(moves[mi], p.tileID, mvLen, dirs[d]);
 									if(paths !== undefined && paths.length > 0){
+
+										//this path is substantial!
+										//TODO: check capture logic for leapfrog & collide here
+										//leapfrog
+										var cap = _.property('capture')(pieceRules);
+										switch(_.property('mechanic')(cap)){
+											case 'leapfrog':
+												console.log("cheacking leapfrog captures");
+												break;
+											case 'collide':
+												console.log("cheacking collide captures");
+												break;
+											default: console.warn("unknown capture mechanic: " + _.property('mechanic')(cap));
+												break;
+										}
+
+
 										waypoints[dirs[d]+","+mvLen] = paths;
 									}
 
@@ -900,7 +917,7 @@
 						console.error(type + " not in PieceType object!\n" + SomeTiles.PieceTypes);
 					}
 
-					this.typeRules = this.getTypeRules(this.type);
+					this.typeRules = this.getTypeRules();
 
 					//assign image if it exists
 					if(this.typeRules !== undefined){ this.imgpath = this.typeRules.imgpath; }
@@ -917,11 +934,11 @@
 				}
 
 				Piece.prototype.getMoves = function(){
-					return this.getTypeRules(this.type).moveVectors;
+					return this.getTypeRules().moveVectors;
 				}
 
-				Piece.prototype.getTypeRules = function(type){
-					return SomeTiles.PieceTypes.rules[type];
+				Piece.prototype.getTypeRules = function(){
+					return SomeTiles.PieceTypes.rules[this.type];
 				}
 
 				Piece.prototype.drawPiece = function(selected){
@@ -1325,7 +1342,7 @@
 				}else{
 					this.specialmove;
 				}
-				
+				 
 			}
 
 			Capture.prototype.isPossible = function(p){
@@ -1413,4 +1430,5 @@
 				return typeMap[capType](targID);
 
 			}
+
 			// END  -- Capture Functions
