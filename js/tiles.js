@@ -517,7 +517,7 @@
 								}
 							}
 
-							if(theMove.mustGoMax){
+							if(theMove !== undefined && theMove.mustGoMax){
 								//necessary because our approach is iterative
 								if(okcount == maxMoveLen){
 									//add the one max tid if we reached it
@@ -723,6 +723,7 @@
 						
 						//update the scoreboard
 						pl.updateScore();
+						//TODO: update of UI elements to show the HOARD
 
 						//showDialog("Player " + (SomeTiles.turn+1) + " just captured a " + victim.type + "!");
 
@@ -913,6 +914,10 @@
 
 				Piece.prototype.getTileInfo = function(){
 					return SomeTiles.Boards[0].tileSet[this.tileID];
+				}
+
+				Piece.prototype.getMoves = function(){
+					return this.getTypeRules(this.type).moveVectors;
 				}
 
 				Piece.prototype.getTypeRules = function(type){
@@ -1365,13 +1370,34 @@
 
 			function checkCaptureMechanic(p,targID,capMech){
 				var mechMap = {
-					collide : function(t){ return (_.indexOf(thePlayer().allowedMoves,t ) >= 0); },
-					landOnTop : function(t){ return foo },//TODO: decide if is this redundant
-					leapfrog : function(t){ return foo }//TODO priority: for Checkers!
+					collide : function(p,t){ return (_.indexOf(thePlayer().allowedMoves,t ) >= 0); },
+					landOnTop : function(p,t){ return foo },//TODO: decide if is this redundant
+					leapfrog : function(p,t){ 
+						var res = false;
+						//1: check distance. dist(targID-p.tileID) must be 2
+						//2: enemy must exist right in front of you in this heading
+						if(getPathDistance(p,t) == 2){
+
+						}
+					}//TODO priority: for Checkers!
 				}, res = false;
 
-				return mechMap[capMech](targID);
+				return mechMap[capMech](p, targID);
 
+			}
+
+
+			function getPathDistance(p, destTID){
+				var res = [], m = p.getMoves();
+
+				//single vectors only for now
+				if(m.length == 1){
+					//maybe my approach is inoptimal for captures
+						//what if we checked for capture conditions while calculating move paths?
+						//any move that results in a capture can get its dest tile ID stored in some Player.captureMoves[]
+				}
+
+				return res;
 			}
 
 
