@@ -433,6 +433,8 @@
 						SomeTiles.Players.push(this);
 					}
 
+					//TODO: put in legend for Player colors
+
 					Player.prototype.selectPiece = function(p){
 						//HOTSEAT: check turns!
 						if(isTurnOf(p.playerNum) == false){
