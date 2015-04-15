@@ -62,24 +62,29 @@
 									mustGoMax: true
 								}
 							}
-
-							//TODO: leapfrog piece captures for Checkers: OUR FIRST FEATURE/MECHANIC!!. HOW TO ABSTRACT THAT?
-							//TODO: any other data fields to be manipulated in gameplay go here!
+							//TODO: any other data fields to be manipulated in gameplay for Circles go here!
 						}
-						,square:{
-							piecesPerPlayer: 0
+						,square:{ //now a chess pawn
+							piecesPerPlayer: 1
 							,startingPositions: -1
 							,moveVectors:[
 								{
-									directions: "ur,ul,dl,dr"
-									,distanceOptions: [-1]
+									directions: "r"
+									,distanceOptions: [1]
+									,relDirections: true
+									,mirrorDirections: true
 									,mustGoMax: false
 									,noclip: false 
 								}
 							],
 							capture: {
 								mechanic: "collide",
-								type: "normal_move"
+								type: "special_move",
+								move: {
+									directions: "ur,dr",
+									distanceOptions: [1],
+									mustGoMax: true
+								}
 							} 
 							//TODO: will be read in from DB same as above, any other data fields here (UNIFORM with above PieceType rules)
 						}
@@ -357,8 +362,7 @@
 					}
 				}
 
-				//TODO: switch turns until a Goal condition is met
-					//hotseat local games only!
+				//switch turns until a Goal condition is met
 				if(SomeTiles.hasOwnProperty('winner')){
 					//remove event listener and put a big message
 					e.target.removeEventListener("click", canvasClick, false);
@@ -673,18 +677,32 @@
 															this.captureMoves[paths[0]] = fullPath[0];
 														}else{
 															//if this is a special move being checked, remove all invalid special moves from path
-															paths.splice(0);//always results in [] for a leapfrog, i think
-															if(SomeTiles.debug){ console.log("getValidMovesMV: removing irrelevant special_move path!"); }
+															paths.splice(0, 1);//always results in [] for a leapfrog, i think
+															if(SomeTiles.debug){ console.log("getValidMovesMV: removing irrelevant special_move leapfrog path!"); }
 															//for instance, we don't highlight a pawn's attack diagonal moves if there are no enemies in range
 																//this might be a good idea for later OR a special version for the game's UI Legend (aka "how to play" blurb)
 														}
 													}
 													break;
-												//case 'collide':
-													//console.log("checking collide captures");
-													//break;
-												//default: console.warn("unknown capture mechanic: " + _.property('mechanic')(cap));
-													//break;
+												case 'collide':
+													console.log("checking collide captures");
+													//only works for move length 1! :(
+														for(var pid =0;pid<paths.length;pid++){
+															if( isEnemyPiece(paths[pid]) ){
+																console.log("collision detected for TID. trigger & capture piece found on TID: " + paths[pid] );
+																this.captureMoves[paths[pid]]= paths[pid];
+															}else{
+																//if this is a special move being checked, remove all invalid special moves from path
+																paths.splice(paths[pid], 1);
+																if(SomeTiles.debug){ console.log("getValidMovesMV: removing irrelevant special_move collide path!"); }
+																//for instance, we don't highlight a pawn's attack diagonal moves if there are no enemies in range
+																	//this might be a good idea for later OR a special version for the game's UI Legend (aka "how to play" blurb)
+															}
+														}
+													
+													break;
+												default: console.warn("unknown capture mechanic: " + _.property('mechanic')(cap));
+													break;
 											}
 										}
 
@@ -919,6 +937,8 @@
 					}
 
 					function switchTurns(){
+
+						//hotseat local games only!
 						thePlayer().isTurn = false;
 						SomeTiles.turn = (Math.abs(SomeTiles.turn-1));
 						thePlayer().isTurn = true;
@@ -1605,7 +1625,7 @@
 			}
 
 			function isEnemyPiece(tid){
-				var p = getPiece(tid)
+				var p = getPiece(tid);
 				return (p !== undefined && (p.playerNum != thePlayer().number));
 			}
 
