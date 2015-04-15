@@ -119,7 +119,7 @@
 								}
 							],
 							capture: {
-								mechanic: "leapfrog",
+								mechanic: "collide",
 								type: "normal_move"
 							}
 						}
@@ -337,7 +337,7 @@
 						if(player.selectedPiece.tileID != theTile.id){
 
 							//check the available moves
-							if(player.allowedMoves.indexOf(theTile.id) > -1 ){
+							if(player.getAllMoves().indexOf(theTile.id) > -1 ){
 								//move is legit, move the piece!
 								hideDialog();//hide error message if still visible
 								movestr = "moving piece from Tile id:" + player.selectedPiece.tileID + "\tto Tile id: " + theTile.id;
@@ -456,15 +456,14 @@
 						//get valid moves for the now-selected Piece p
 						this.getValidMovesMV(p, p.getMoves(), "allowedMoves");
 						
-						//if there are any special moves, add them to Player's allowedMoves
-						/*if(p.getCapType() == "special_move"){
-							this.getValidMovesMV(p,[p.getSpecialMove()],"allowedMoves");
-						}*/
+						//if there are any applicable special moves, add them to Player's specialMoves
+						if(p.getCapType() == "special_move"){
+							this.getValidMovesMV(p,[p.getSpecialMove()],"specialMoves");
+							this.showMoves(this.specialMoves);
+						}
 
-						this.showValidMoves();
-
-						
-						
+						this.showMoves(this.allowedMoves);
+												
 
 						//MOVES -- moves are defined as adjacent spaces a player can go to with this newly-selected Piece!
 						//8 moves are classified in counter-clockwise quadrants like cartesian plane
@@ -479,20 +478,24 @@
 						
 					}
 
+					Player.prototype.getAllMoves = function(){
+						return _.union(this.allowedMoves,this.specialMoves);
+					}
+
 					Player.prototype.deselectPiece = function(p){
 						this.selectedPiece = undefined;
-						this.allowedMoves = [];
-						this.captureMoves = {};
+						//this.allowedMoves = [];
+						//this.captureMoves = {};
 						p.drawPiece(true);//redraw in same position
 
 						//CLEAR the valid moves away
 						clearMoves();
 					}
 
-					Player.prototype.showValidMoves = function(){
+					Player.prototype.showMoves = function(moveArray){
 						var t, b = getBoard();
-						for(var i=0;i<this.allowedMoves.length;i++){
-							t = this.allowedMoves[i];
+						for(var i=0;i<moveArray.length;i++){
+							t = moveArray[i];
 							drawMove(t,b.getTile(t).x,b.getTile(t).y);
 						}
 					}
@@ -611,8 +614,6 @@
 							for(var d = 0;d<dirs.length;d++){
 								var mvOptions = moves[mi].distanceOptions, mvLen;
 
-								//waypoints.set[d] = d;
-
 								for(var opti = 0;opti<mvOptions.length;opti++){
 									mvLen = mvOptions[opti];//how far we want to go
 									if(mvLen == "*" || mvLen == -1){
@@ -625,6 +626,7 @@
 
 										//this path is substantial!
 										//check capture logic for leapfrog & collide here ONLY if type =='normal_move'
+										//this is all to populate captureMoves to make captures happen
 										var cap = _.property('capture')(pieceRules);
 										if(_.property('type')(cap) == "normal_move"){
 
@@ -648,16 +650,24 @@
 												case 'leapfrog':
 													var fullPath = this.getFullMovePath(p.tileID, mvLen, dirs[d]);
 													//console.log("checking leapfrog captures, path len: " + paths.length + "\tenemy Piece on tile " + fullPath[0] + "? " + isEnemyPiece(fullPath[0]));
-													if(mvLen == 2 && isEnemyPiece(fullPath[0])){
-														console.log("leapfrog detected for TID. trigger piece " + paths[0] + " and piece to cap is " + fullPath[0]);
-														this.captureMoves[paths[0]] = fullPath[0];
+													if(mvLen ==2){
+														if( isEnemyPiece(fullPath[0]) ){
+															console.log("leapfrog detected for TID. trigger piece " + paths[0] + " and piece to cap is " + fullPath[0]);
+															this.captureMoves[paths[0]] = fullPath[0];
+														}else{
+															//if this is a special move being checked, remove all invalid special moves from path
+															paths.splice(0);//always results in [] for a leapfrog, i think
+															if(SomeTiles.debug){ console.log("getValidMovesMV: removing irrelevant special_move path!"); }
+															//for instance, we don't highlight a pawn's attack diagonal moves if there are no enemies in range
+																//this might be a good idea for later OR a special version for the game's UI Legend (aka "how to play" blurb)
+														}
 													}
 													break;
-												/*case 'collide':
-													console.log("checking collide captures");
-													break;
-												default: console.warn("unknown capture mechanic: " + _.property('mechanic')(cap));
-													break;*/
+												//case 'collide':
+													//console.log("checking collide captures");
+													//break;
+												//default: console.warn("unknown capture mechanic: " + _.property('mechanic')(cap));
+													//break;
 											}
 										}
 
@@ -732,7 +742,7 @@
 							
 							var cmech = checkCaptureMechanic(p, destTile.id, pcType.capture.mechanic);
 							//does the capture type work here?
-							if( checkCaptureType(p,destTile.id,pcType.capture.type) ){
+							if( pieceTypeCanCapture(p,destTile.id,pcType.capture.type) ){
 								//does the capture mechanic work here?
 								if( typeof cmech == 'boolean' && cmech == true ){
 									this.capturePiece(p,destTile);//GOTEM!
@@ -759,7 +769,9 @@
 									//enemy piece detected!
 									var pcType = p.getTypeRules();
 
-									if(this.tryCapture(p, destTile) == false){
+									if(p.getCapMechanic() == 'collide'){
+										this.tryCapture(p, destTile);
+									}else{
 										res = true;
 									}
 									/*//do collide captures if applicable
@@ -768,7 +780,7 @@
 											
 											var cmech = checkCaptureMechanic(piece, destTile.id, pcType.capture.mechanic);
 											//does the capture type work here?
-											if( checkCaptureType(piece,destTile.id,pcType.capture.type) ){
+											if( pieceTypeCanCapture(piece,destTile.id,pcType.capture.type) ){
 												//does the capture mechanic work here?
 												if( typeof cmech == 'boolean' && cmech == true ){
 													this.capturePiece(piece,destTile);//GOTEM!
@@ -965,7 +977,20 @@
 
 
 				function clearMoves(){
-					var canvas = document.getElementById(SomeTiles.c.moves);
+					cleanCanvas(SomeTiles.c.moves);
+
+					//then empty our sets of stored valid moves
+					var pl = thePlayer();
+					pl.allowedMoves = [];
+					pl.captureMoves = {};
+					
+					if(pl.hasOwnProperty("specialMoves")){
+						pl.specialMoves = [];
+					}
+				}
+
+				function cleanCanvas(canvasID){
+					var canvas = document.getElementById(canvasID);
 					if(canvas && canvas.getContext){
 						var ctx = canvas.getContext("2d");
 						// Store the current transformation matrix
@@ -978,6 +1003,8 @@
 						// Restore the transform
 						ctx.restore();
 
+					}else{
+						if(SomeTiles.debug){ console.warn("cleanCanvas: element ID " + canvasID + "not found!"); }
 					}
 				}
 
@@ -1520,12 +1547,15 @@
 			}
 
 
-			function checkCaptureType(p,targID,capType){
+			function pieceTypeCanCapture(p,targID,capType){
 				var typeMap = {
 					normal_move : function(tid){ 
 						return (_.indexOf(thePlayer().allowedMoves,tid ) >= 0); 
 					},
-					special_move : function(r){ return foo },//TODO priority: for Checkers!
+					special_move : function(tid){
+						//given that thePlayer().getValidMovesMV(); has run and put a valid path into 
+						return ( _.indexOf(thePlayer().specialMoves, tid) >= 0 );
+					},//TODO priority: for Checkers!
 					action : function(r){ return foo }//TODO: once actions are in
 				}, res = false;
 
