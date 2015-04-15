@@ -79,8 +79,8 @@
 							],
 							capture: {
 								mechanic: "collide",
-								type: "special_move",
-								move: {
+								type: "special_move"
+								,move: {
 									directions: "ur,dr",
 									distanceOptions: [1],
 									mustGoMax: true
@@ -660,7 +660,7 @@
 														this.captureMoves[paths[0]] = fullPath[0];
 													}
 													break;
-												/*case 'collide':
+												/*case 'collide': //handled in checkDestMove() fn!
 													console.log("checking collide captures");
 													break;
 												default: console.warn("unknown capture mechanic: " + _.property('mechanic')(cap));
@@ -685,16 +685,20 @@
 													}
 													break;
 												case 'collide':
-													console.log("checking collide captures");
-													//only works for move length 1! :(
+													
 														var loopPaths = paths;
 														for(var pid =0;pid<loopPaths.length;pid++){
+															if(SomeTiles.debug){console.log("checking for collide captures between " + p.type + " at tile " + p.tileID + " and target tile " + loopPaths[pid]);}
+															
+
+															//TODO PRIORITY: fix bug with this re: all non-capture moves being removed. 
+															//		the normal piece move gets eaten for a Chess pawn!
 															if( isEnemyPiece(loopPaths[pid]) ){
 																console.log("collision detected for TID. trigger & capture piece found on TID: " + loopPaths[pid] );
 																this.captureMoves[loopPaths[pid]]= loopPaths[pid];
 															}else{
 																//if this is a special move being checked, remove all invalid special moves from path
-																paths.splice(pid, 1);
+																paths = _.without(_.flatten(paths), loopPaths[pid]);
 																if(SomeTiles.debug){ console.log("getValidMovesMV: removing irrelevant special_move collide path!"); }
 																//for instance, we don't highlight a pawn's attack diagonal moves if there are no enemies in range
 																	//this might be a good idea for later OR a special version for the game's UI Legend (aka "how to play" blurb)
@@ -702,7 +706,8 @@
 														}
 													
 													break;
-												default: console.warn("unknown capture mechanic: " + _.property('mechanic')(cap));
+												default: 
+												if(SomeTiles.debug){ console.warn("unknown capture mechanic: " + _.property('mechanic')(cap)); }
 													break;
 											}
 										}
@@ -1617,7 +1622,7 @@
 					special_move : function(tid){
 						//given that thePlayer().getValidMovesMV(); has run and put a valid path into 
 						return ( _.indexOf(thePlayer().specialMoves, tid) >= 0 );
-					},//TODO priority: for Checkers!
+					},
 					action : function(r){ return foo }//TODO: once actions are in
 				}, res = false;
 
