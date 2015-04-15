@@ -71,8 +71,8 @@
 								{
 									directions: "r"
 									,distanceOptions: [1]
-									,relDirections: true
-									,mirrorDirections: true
+									,relDirections: true//TODO: code me
+									,mirrorDirections: true//TODO: code this in
 									,mustGoMax: false
 									,noclip: false 
 								}
@@ -90,7 +90,7 @@
 						}
 						,knight:{
 							imgpath: "img/knight.png",
-							piecesPerPlayer: 0
+							piecesPerPlayer: 1
 							,startingPositions: -1
 							,moveVectors:[
 								{
@@ -479,7 +479,7 @@
 						
 						//if there are any applicable special moves, add them to Player's specialMoves
 						if(p.getCapType() == "special_move"){
-							this.getValidMovesMV(p,[p.getSpecialMove()],"specialMoves");
+							this.getValidMovesMV(p,[p.getSpecialMove()],"specialMoves",true);
 							this.showMoves(this.specialMoves);
 						}
 
@@ -617,7 +617,7 @@
 
 					}
 
-					Player.prototype.getValidMovesMV = function(p, moveset, playerStorage){
+					Player.prototype.getValidMovesMV = function(p, moveset, playerStorage, isSpecial){
 						var pieceRules = getPieceTypeInfo(p.type),
 						moves = moveset,
 						mydirs, waypoints = {}, goodTiles = [],
@@ -646,7 +646,7 @@
 									if(paths !== undefined && paths.length > 0){
 
 										//this path is substantial!
-										//check capture logic for leapfrog & collide here ONLY if type =='normal_move'
+										//START -- check capture logic for leapfrog & collide here ONLY if type =='normal_move'
 										//this is all to populate captureMoves to make captures happen
 										var cap = _.property('capture')(pieceRules);
 										if(_.property('type')(cap) == "normal_move"){
@@ -698,7 +698,9 @@
 																this.captureMoves[loopPaths[pid]]= loopPaths[pid];
 															}else{
 																//if this is a special move being checked, remove all invalid special moves from path
-																paths = _.without(_.flatten(paths), loopPaths[pid]);
+																if(isSpecial){
+																	paths = _.without(_.flatten(paths), loopPaths[pid]); 
+																}
 																if(SomeTiles.debug){ console.log("getValidMovesMV: removing irrelevant special_move collide path!"); }
 																//for instance, we don't highlight a pawn's attack diagonal moves if there are no enemies in range
 																	//this might be a good idea for later OR a special version for the game's UI Legend (aka "how to play" blurb)
@@ -710,7 +712,7 @@
 												if(SomeTiles.debug){ console.warn("unknown capture mechanic: " + _.property('mechanic')(cap)); }
 													break;
 											}
-										}
+										}// END  -- check capture logic
 
 
 										waypoints[dirs[d]+","+mvLen] = paths;
@@ -811,7 +813,11 @@
 									var pcType = p.getTypeRules();
 
 									if(p.getCapMechanic() == 'collide'){
-										this.tryCapture(p, destTile);
+										if(p.getCapType() == 'normal_move'){
+											this.tryCapture(p, destTile);
+										}else{
+											//collide and special move logic here
+										}
 									}else{
 										res = true;
 									}
@@ -909,6 +915,7 @@
 						if(p.getCapMechanic() == 'leapfrog'){
 							this.tryCapture(p,destTile);//for leapfrogs or other special cases
 						}
+						//TODO priority: make Object for Move, see where it takes me
 						
 
 						//move the given Piece p to the given destination Tile 
@@ -1604,7 +1611,7 @@
 
 			function checkCaptureMechanic(p,targID,capMech){
 				var mechMap = {
-					collide : function(p,t){ return (_.indexOf(thePlayer().allowedMoves,t ) >= 0); },
+					collide : function(p,t){ return (_.indexOf(thePlayer().getAllMoves(),t ) >= 0); },
 					//landOnTop : function(p,t){ return foo },//this is redundant!
 					leapfrog : function(p,t){ return thePlayer().checkLeapfrog(p,t); }
 				}, res = false;
