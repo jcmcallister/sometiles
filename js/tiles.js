@@ -40,11 +40,14 @@
 					types: ["circle","square", "knight", "doge"],
 					rules:{
 						circle:{
-							piecesPerPlayer: 4,
-							startingPositions: [[0,0],[3,3], [0,7],[3,4]]//structured order = numeric xy coords, random places on half board = -1
+							piecesPerPlayer: 2,
+							symmetricPlacement: false,
+							sameColorPlacement: true,//TODO priority: finish placement and checkers is up!
+							//startingPositions: [[0,0],[3,3], [0,7],[3,4]]//mirrored piece placement = numeric xy coords, random places on half board = -1
+							startingPositions: [[2,2], [3,5]]
 							,moveVectors:[
 								{
-									directions: "ur,ul,dl,dr"
+									directions: "ur,ul,dl,dr,up,l,d,r"
 									,distanceOptions: [1] //these are options the player could make use of, see the Knight piece below
 									,mustGoMax: false
 									,noclip: false //if noclip, the Piece floats through adjacent pieces from src to dest
@@ -64,9 +67,9 @@
 							//TODO Priority: multi-vector movement e.g. Knights in Chess, or double-jumps in Checkers
 							//TODO: leapfrog piece captures for Checkers: OUR FIRST FEATURE/MECHANIC!!. HOW TO ABSTRACT THAT?
 							//TODO: any other data fields to be manipulated in gameplay go here!
-						},
-						square:{
-							piecesPerPlayer: 1
+						}
+						,square:{
+							piecesPerPlayer: 0
 							,startingPositions: -1
 							,moveVectors:[
 								{
@@ -81,10 +84,10 @@
 								type: "normal_move"
 							} 
 							//TODO: will be read in from DB same as above, any other data fields here (UNIFORM with above PieceType rules)
-						},
-						knight:{
+						}
+						,knight:{
 							imgpath: "img/knight.png",
-							piecesPerPlayer: 2
+							piecesPerPlayer: 0
 							,startingPositions: -1
 							,moveVectors:[
 								{
@@ -105,8 +108,8 @@
 								mechanic: "collide",
 								type: "normal_move"
 							}
-						},
-						doge:{
+						}
+						,doge:{
 							imgpath: "img/doge.png",
 							piecesPerPlayer: 2
 							,startingPositions: -1
@@ -119,7 +122,7 @@
 								}
 							],
 							capture: {
-								mechanic: "collide",
+								mechanic: "leapfrog",
 								type: "normal_move"
 							}
 						}
@@ -143,7 +146,9 @@
 					}
 					,boardColors: ["#7c5236","#111"]
 					,turn : null
-					//,Goal: //TODO PRIORITY: get a simple goal ic working
+					,GoalConditions: {
+						zeroEnemies: true
+					}
 				};
 
 			//our MAIN()
@@ -231,7 +236,14 @@
 				//switchTurn() call inside of movePiece(), should be in any action function that consumes or finishes a turn  
 				//TODO: switch turns until a Goal condition is met
 					//hotseat local games only!
+				if(SomeTiles.hasOwnProperty('winner')){
+					//remove event listener and put a big message
+					canvas.removeEventListener("click", canvasClick, false);
 
+					showDialog("Player " + (this.number+1) + " WINS!");
+
+					//TODO: do voting stuff
+				}
 			}
 
 			function getTopLayerCanvas(){
@@ -395,6 +407,10 @@
 				return SomeTiles.Players[SomeTiles.turn];
 			}
 
+			function theEnemy(){
+				return SomeTiles.Players[Math.abs(SomeTiles.turn-1)];
+			}
+
 			function getTileFromXY(x,y){
 				var b = getBoard(), t;
 
@@ -418,6 +434,7 @@
 				if(typeof t != "string"){t="";}
 				return SomeTiles.PieceTypes.rules[t];
 			}
+
 
 			//START -- Player Functions
 				//Player
@@ -838,6 +855,23 @@
 
 					}
 
+					Player.prototype.goalCheck = function(){
+						//get the goal conditions
+						var g = getGoals(), keys = _.keys(g), res=false;
+
+						//check to see if any are met
+						for(var i=0; i<keys.length;i++){
+							switch( keys[i] ){
+								case 'zeroEnemies':
+									res = (g.zeroEnemies == true && theEnemy().Pieces.length == 0);
+									break;
+								default:
+									if(SomeTiles.debug){ console.log("goalCheck: unknown goal condition " + keys[i]); }
+									break;
+							}
+						}
+						return res;
+					}
 					
 					Player.prototype.movePiece = function(p,destTile){
 
@@ -871,7 +905,14 @@
 						//an old impl'n of this re-drew the whole board + pieces on every pass. this is WORTH IT!
 
 						//TODO: goal conditions check HERE!
-						//if(goal not met), keep going, else declare winner and do voting stuff
+
+						//check if Goal is met
+						if(this.goalCheck() == true){
+							//declare winner
+							SomeTiles['winner'] = this.number;
+							
+						}
+						//if goal not met, keep going, else declare winner and do voting stuff
 						//on successful Move, change player turn!
 						switchTurns();
 
@@ -1569,3 +1610,6 @@
 			}
 
 			// END  -- Capture Functions
+
+
+			function getGoals(){ return SomeTiles.GoalConditions; }
