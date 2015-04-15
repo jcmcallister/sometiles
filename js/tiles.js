@@ -44,15 +44,20 @@
 							startingPositions: [[0,0],[3,3], [0,7],[3,4]]//structured order = numeric xy coords, random places on half board = -1
 							,moveVectors:[
 								{
-									directions: "r,up,l,d"
+									directions: "ur,ul,dl,dr"
 									,distanceOptions: [1] //these are options the player could make use of, see the Knight piece below
 									,mustGoMax: false
 									,noclip: false //if noclip, the Piece floats through adjacent pieces from src to dest
 								}
 							],
 							capture: {
-								mechanic: "collide",
-								type: "normal_move"
+								mechanic: "leapfrog",
+								type: "special_move",
+								move: {
+									directions: "ur,ul,dl,dr",
+									distanceOptions: [2],
+									mustGoMax: true
+								}
 							}
 
 							//new Capture("collide","normal_move","circle")//circles are boring! 
@@ -449,8 +454,16 @@
 						p.drawPiece(true);//redraw in same position
 
 						//get valid moves for the now-selected Piece p
-						this.getValidMovesMV(p);
+						this.getValidMovesMV(p, p.getMoves(), "allowedMoves");
+						
+						//if there are any special moves, add them to Player's allowedMoves
+						/*if(p.getCapType() == "special_move"){
+							this.getValidMovesMV(p,[p.getSpecialMove()],"allowedMoves");
+						}*/
+
 						this.showValidMoves();
+
+						
 						
 
 						//MOVES -- moves are defined as adjacent spaces a player can go to with this newly-selected Piece!
@@ -580,9 +593,9 @@
 
 					}
 
-					Player.prototype.getValidMovesMV = function(p){
+					Player.prototype.getValidMovesMV = function(p, moveset, playerStorage){
 						var pieceRules = getPieceTypeInfo(p.type),
-						moves = pieceRules.moveVectors,
+						moves = moveset,
 						mydirs, waypoints = {}, goodTiles = [],
 						destTileID, b= getBoard(), x=b.numTilesX, y=b.numTilesY;
 						
@@ -611,8 +624,7 @@
 									if(paths !== undefined && paths.length > 0){
 
 										//this path is substantial!
-										//TODO: check capture logic for leapfrog & collide here ONLY if type =='normal_move'
-										//leapfrog
+										//check capture logic for leapfrog & collide here ONLY if type =='normal_move'
 										var cap = _.property('capture')(pieceRules);
 										if(_.property('type')(cap) == "normal_move"){
 
@@ -625,11 +637,27 @@
 														this.captureMoves[paths[0]] = fullPath[0];
 													}
 													break;
-												case 'collide':
+												/*case 'collide':
 													console.log("checking collide captures");
 													break;
 												default: console.warn("unknown capture mechanic: " + _.property('mechanic')(cap));
+													break;*/
+											}
+										}else if(_.property('type')(cap) == "special_move"){
+											switch(_.property('mechanic')(cap)){
+												case 'leapfrog':
+													var fullPath = this.getFullMovePath(p.tileID, mvLen, dirs[d]);
+													//console.log("checking leapfrog captures, path len: " + paths.length + "\tenemy Piece on tile " + fullPath[0] + "? " + isEnemyPiece(fullPath[0]));
+													if(mvLen == 2 && isEnemyPiece(fullPath[0])){
+														console.log("leapfrog detected for TID. trigger piece " + paths[0] + " and piece to cap is " + fullPath[0]);
+														this.captureMoves[paths[0]] = fullPath[0];
+													}
 													break;
+												/*case 'collide':
+													console.log("checking collide captures");
+													break;
+												default: console.warn("unknown capture mechanic: " + _.property('mechanic')(cap));
+													break;*/
 											}
 										}
 
@@ -684,11 +712,11 @@
 								}
 
 								//clean up the outermost waypoints and put the tileID values into allowedMoves
-								this.allowedMoves = _.uniq( _.flatten(_.values(goodTiles)) );
+								this[playerStorage] = _.union(_.uniq( _.flatten(_.values(goodTiles)) ), this[playerStorage]);
 
 							}else{
 								//clean up the outermost waypoints and put the tileID values into allowedMoves
-								this.allowedMoves = _.uniq( _.flatten(_.values(waypoints)) );
+								this[playerStorage] = _.union(_.uniq( _.flatten(_.values(waypoints)) ), this[playerStorage]);
 							}
 							
 						
@@ -808,7 +836,7 @@
 							return;
 						}
 
-						if(p.getMechanic() == 'leapfrog'){
+						if(p.getCapMechanic() == 'leapfrog'){
 							this.tryCapture(p,destTile);//for leapfrogs or other special cases
 						}
 						
@@ -1016,8 +1044,16 @@
 					return SomeTiles.Boards[0].tileSet[this.tileID];
 				}
 
-				Piece.prototype.getMechanic = function(){
+				Piece.prototype.getCapMechanic = function(){
 					return this.getTypeRules().capture.mechanic;
+				}
+
+				Piece.prototype.getCapType = function(){
+					return this.getTypeRules().capture.type;
+				}
+
+				Piece.prototype.getSpecialMove = function(){
+					return this.getTypeRules().capture.move;
 				}
 
 				Piece.prototype.getMoves = function(){
@@ -1475,7 +1511,7 @@
 			function checkCaptureMechanic(p,targID,capMech){
 				var mechMap = {
 					collide : function(p,t){ return (_.indexOf(thePlayer().allowedMoves,t ) >= 0); },
-					landOnTop : function(p,t){ return foo },//TODO: decide if is this redundant
+					//landOnTop : function(p,t){ return foo },//this is redundant!
 					leapfrog : function(p,t){ return thePlayer().checkLeapfrog(p,t); }
 				}, res = false;
 
@@ -1484,26 +1520,12 @@
 			}
 
 
-			function getPathDistance(p, destTID){
-				var res = [], m = p.getMoves();
-
-				//single vectors only for now
-				if(m.length == 1){
-					//maybe my approach is inoptimal for captures
-						//what if we checked for capture conditions while calculating move paths?
-						//any move that results in a capture can get its dest tile ID stored in some Player.captureMoves[]
-				}
-
-				return res;
-			}
-
-
 			function checkCaptureType(p,targID,capType){
 				var typeMap = {
 					normal_move : function(tid){ 
 						return (_.indexOf(thePlayer().allowedMoves,tid ) >= 0); 
 					},
-					special_move : function(r){ return foo },//TODO priority
+					special_move : function(r){ return foo },//TODO priority: for Checkers!
 					action : function(r){ return foo }//TODO: once actions are in
 				}, res = false;
 
