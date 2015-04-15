@@ -63,8 +63,6 @@
 								}
 							}
 
-							//new Capture("collide","normal_move","circle")//circles are boring! 
-							//TODO Priority: multi-vector movement e.g. Knights in Chess, or double-jumps in Checkers
 							//TODO: leapfrog piece captures for Checkers: OUR FIRST FEATURE/MECHANIC!!. HOW TO ABSTRACT THAT?
 							//TODO: any other data fields to be manipulated in gameplay go here!
 						}
@@ -234,16 +232,7 @@
 					canvas.addEventListener("click", canvasClick, false);
 
 				//switchTurn() call inside of movePiece(), should be in any action function that consumes or finishes a turn  
-				//TODO: switch turns until a Goal condition is met
-					//hotseat local games only!
-				if(SomeTiles.hasOwnProperty('winner')){
-					//remove event listener and put a big message
-					canvas.removeEventListener("click", canvasClick, false);
-
-					showDialog("Player " + (this.number+1) + " WINS!");
-
-					//TODO: do voting stuff
-				}
+				
 			}
 
 			function getTopLayerCanvas(){
@@ -366,6 +355,17 @@
 							movestr = "deselecting! (can't move piece to same Tile)"; 
 						}
 					}
+				}
+
+				//TODO: switch turns until a Goal condition is met
+					//hotseat local games only!
+				if(SomeTiles.hasOwnProperty('winner')){
+					//remove event listener and put a big message
+					e.target.removeEventListener("click", canvasClick, false);
+
+					showDialog("Player " + (player.number+1) + " WINS!");
+
+					//TODO: do voting stuff
 				}
 
 				if(SomeTiles.debug){
@@ -910,11 +910,11 @@
 						if(this.goalCheck() == true){
 							//declare winner
 							SomeTiles['winner'] = this.number;
-							
+						}else{
+							//if goal not met, keep going, else declare winner and do voting stuff
+							//on successful Move, change player turn!
+							switchTurns();
 						}
-						//if goal not met, keep going, else declare winner and do voting stuff
-						//on successful Move, change player turn!
-						switchTurns();
 
 					}
 
