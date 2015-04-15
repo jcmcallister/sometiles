@@ -1141,6 +1141,19 @@
 					//this.moveset
 				}
 
+				Piece.prototype.calcMovesOfType = function(t){
+					//todo: this calculates all possible moves of each type
+
+					//check if all normal moves already calculated
+
+					//check if all special moves calculated
+
+					//if both, return
+
+					//else calc. all possible moves for this piece type, and 
+					//		save them into something in the SomeTiles.PieceType object
+				}
+
 				Piece.prototype.getTileInfo = function(){
 					return SomeTiles.Boards[0].tileSet[this.tileID];
 				}
