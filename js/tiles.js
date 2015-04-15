@@ -114,7 +114,7 @@
 								}
 							],
 							capture: {
-								mechanic: "collide",
+								mechanic: "leapfrog",
 								type: "normal_move"
 							}
 						}
@@ -426,6 +426,7 @@
 
 						this.selectedPiece;//normally a piece ID
 						this.allowedMoves = [];//a set of Tile IDs for moves allowed for selected pieces
+						this.captureMoves = {};//set of TIDs for moves that will result in a capture!
 
 						this.isTurn = false;
 						this.scoreCount = 0;
@@ -468,6 +469,7 @@
 					Player.prototype.deselectPiece = function(p){
 						this.selectedPiece = undefined;
 						this.allowedMoves = [];
+						this.captureMoves = {};
 						p.drawPiece(true);//redraw in same position
 
 						//CLEAR the valid moves away
@@ -482,30 +484,13 @@
 						}
 					}
 
-					//Player.prototype.validateMove = function(moves, currTID, moveNum, direction){
+					//this function could be renamed getValidMovePath()
 						//given the Move object, currentPieceLocation, max move length, desired direction, and where to store valid tileIDs
 					Player.prototype.validateMovePath = function(theMove, currTID, maxMoveLen, direction){
 						//we do hashes, thanks to dave calhoun @ http://davidbcalhoun.com/2010/is-hash-faster-than-switch-in-javascript/
 						var destTileID,
-						conditionMap = {
-							r: function(tid, w, h){ return (tid <= ((w*h)-w)-1); },
-							ur: function(tid, w, h){ return (tid <= ((w*h)-w)-1 && (tid % h) > 0); },
-							up: function(tid, w, h){ return (tid % h > 0); },
-							ul: function(tid, w, h){ return (tid >= h && tid % h > 0); },
-							l: function(tid, w, h){ return (tid >= h); },
-							dl: function(tid, w, h){ return (tid >= h && (tid % h) != (h-1)); },
-							d: function(tid, w, h){ return (tid % h) != (h-1); },
-							dr: function(tid, w, h){ return (tid <= ((w*h)-w)-1 && (tid % h) != (h-1)); }
-						}, tilePathMap = {
-							r: function(tid,w,h){ return tid+h; },
-							ur: function(tid,w,h){ return tid + h-1; },
-							up: function(tid,w,h){ return tid - 1; },
-							ul: function(tid,w,h){ return (tid - h) - 1; },
-							l: function(tid,w,h){ return (tid - h);},
-							dl: function(tid,w,h){ return (tid - h) + 1;},
-							d: function(tid,w,h){ return tid + 1;},
-							dr: function(tid,w,h){ return tid + h + 1;}
-						}, b = getBoard(), okcount = 0, tmp = [], storage= [], tid = currTID;
+						conditionMap = getMoveConditions(),
+						tilePathMap = getMoveLogic(), b = getBoard(), okcount = 0, tmp = [], storage= [], tid = currTID;
 						try{
 							//check for every spot on the path to maxMoveLen
 
@@ -541,7 +526,23 @@
 
 					}
 
-					
+					Player.prototype.getFullMovePath = function(currTID, maxMoveLen, direction){
+						var conditionMap = getMoveConditions(),
+						tilePathMap = getMoveLogic(), 
+						storage = [],
+						tid = currTID, destID, b = getBoard();
+
+						for(var i = 0; i <maxMoveLen; i++){
+							if(conditionMap[direction](tid,b.numTilesX, b.numTilesY)){
+								//put tilePathMap value into temp storage
+								destID = tilePathMap[direction](tid,b.numTilesX,b.numTilesY);
+								storage.push( destID );
+								tid = destID;
+							}
+						}
+
+						return (storage.length == 0 ? undefined : storage);
+					}
 
 					Player.prototype.getMoveFromRelMove = function(initHeading, relDir){
 						//context: you just moved initHeading and want to move relDir. 
@@ -610,18 +611,26 @@
 									if(paths !== undefined && paths.length > 0){
 
 										//this path is substantial!
-										//TODO: check capture logic for leapfrog & collide here
+										//TODO: check capture logic for leapfrog & collide here ONLY if type =='normal_move'
 										//leapfrog
 										var cap = _.property('capture')(pieceRules);
-										switch(_.property('mechanic')(cap)){
-											case 'leapfrog':
-												console.log("cheacking leapfrog captures");
-												break;
-											case 'collide':
-												console.log("cheacking collide captures");
-												break;
-											default: console.warn("unknown capture mechanic: " + _.property('mechanic')(cap));
-												break;
+										if(_.property('type')(cap) == "normal_move"){
+
+											switch(_.property('mechanic')(cap)){
+												case 'leapfrog':
+													var fullPath = this.getFullMovePath(p.tileID, mvLen, dirs[d]);
+													//console.log("checking leapfrog captures, path len: " + paths.length + "\tenemy Piece on tile " + fullPath[0] + "? " + isEnemyPiece(fullPath[0]));
+													if(mvLen == 2 && isEnemyPiece(fullPath[0])){
+														console.log("leapfrog detected for TID. trigger piece " + paths[0] + " and piece to cap is " + fullPath[0]);
+														this.captureMoves[paths[0]] = fullPath[0];
+													}
+													break;
+												case 'collide':
+													console.log("checking collide captures");
+													break;
+												default: console.warn("unknown capture mechanic: " + _.property('mechanic')(cap));
+													break;
+											}
 										}
 
 
@@ -688,6 +697,27 @@
 
 					}
 
+					Player.prototype.tryCapture = function(p,destTile){
+						//purpose: do any captures if applicable, return a bool indicating success
+						var res = false, pcType = p.getTypeRules();
+						if(pcType.hasOwnProperty('capture') && pcType.capture !== undefined){
+							
+							var cmech = checkCaptureMechanic(p, destTile.id, pcType.capture.mechanic);
+							//does the capture type work here?
+							if( checkCaptureType(p,destTile.id,pcType.capture.type) ){
+								//does the capture mechanic work here?
+								if( typeof cmech == 'boolean' && cmech == true ){
+									this.capturePiece(p,destTile);//GOTEM!
+									res = true;
+								}else if( typeof cmech == 'number'){
+									this.capturePiece(p,cmech);
+									res = true;
+								}
+							}
+						}
+						return res;
+					}
+
 					Player.prototype.checkMoveDest = function(p, destTile){
 						//checks destTile to see if there are pieces on top of it, e.g. is it clear?
 						var res = false, destPieces = getPieces(destTile.id);
@@ -699,21 +729,33 @@
 								piece = destPieces[i];
 								if(piece.playerNum != this.number){
 									//enemy piece detected!
-									var pcType = getPieceTypeInfo(p.type);
-									if(pcType.hasOwnProperty('capture') && pcType.capture !== undefined){
-										//does the capture type work here?
-										if( checkCaptureType(piece,destTile.id,pcType.capture.type) ){
-											
-											//does the capture mechanic work here?
-											if(checkCaptureMechanic(piece, destTile.id, pcType.capture.mechanic)){
-												this.capturePiece(piece,destTile);//GOTEM!
-											}else{
-												res = true;//you're blocked, brah
-											}
-										}else{
-											res = true;//this isn't a cap move, should be treated as an obstacle
-										}
+									var pcType = p.getTypeRules();
+
+									if(this.tryCapture(p, destTile) == false){
+										res = true;
 									}
+									/*//do collide captures if applicable
+									//if(this.captureMoves.length > 0){
+										if(pcType.hasOwnProperty('capture') && pcType.capture !== undefined){
+											
+											var cmech = checkCaptureMechanic(piece, destTile.id, pcType.capture.mechanic);
+											//does the capture type work here?
+											if( checkCaptureType(piece,destTile.id,pcType.capture.type) ){
+												//does the capture mechanic work here?
+												if( typeof cmech == 'boolean' && cmech == true ){
+													this.capturePiece(piece,destTile);//GOTEM!
+												}else if( typeof cmech == 'number'){
+													this.capturePiece(piece,cmech);
+												}else{
+													res = true;//you're blocked, brah
+												}
+											}else{
+												res = true;//this isn't a cap move, should be treated as an obstacle
+											}
+										}
+									//}else{ res = true; }*/
+
+									
 								}else{
 									//friendly piece detected!
 									res = true;
@@ -730,7 +772,15 @@
 						return res;
 					}
 
+					Player.prototype.checkLeapfrog = function(p, destID){
+						return (typeof this.captureMoves == 'object' && this.captureMoves.hasOwnProperty(destID)) ? this.captureMoves[destID] : false;
+					}
+
 					Player.prototype.capturePiece = function(p,destTile,cap){
+						if(typeof destTile == 'number'){
+							var tmp = destTile;
+							destTile = { id: tmp};
+						}
 						console.log("piece " + p.id + " just captured the piece at " + destTile.id + "!!!");
 						
 						//remove the piece at destTile.id
@@ -757,6 +807,11 @@
 							showDialog("You're blocked! Try another way or another Piece!");
 							return;
 						}
+
+						if(p.getMechanic() == 'leapfrog'){
+							this.tryCapture(p,destTile);//for leapfrogs or other special cases
+						}
+						
 
 						//move the given Piece p to the given destination Tile 
 						
@@ -830,6 +885,32 @@
 
 
 			//START -- Move Functions
+
+				function getMoveConditions(){
+					return {
+						r: function(tid, w, h){ return (tid <= ((w*h)-w)-1); },
+						ur: function(tid, w, h){ return (tid <= ((w*h)-w)-1 && (tid % h) > 0); },
+						up: function(tid, w, h){ return (tid % h > 0); },
+						ul: function(tid, w, h){ return (tid >= h && tid % h > 0); },
+						l: function(tid, w, h){ return (tid >= h); },
+						dl: function(tid, w, h){ return (tid >= h && (tid % h) != (h-1)); },
+						d: function(tid, w, h){ return (tid % h) != (h-1); },
+						dr: function(tid, w, h){ return (tid <= ((w*h)-w)-1 && (tid % h) != (h-1)); }
+					};
+				}
+
+				function getMoveLogic(){
+					return {
+							r: function(tid,w,h){ return tid+h; },
+							ur: function(tid,w,h){ return tid + h-1; },
+							up: function(tid,w,h){ return tid - 1; },
+							ul: function(tid,w,h){ return (tid - h) - 1; },
+							l: function(tid,w,h){ return (tid - h);},
+							dl: function(tid,w,h){ return (tid - h) + 1;},
+							d: function(tid,w,h){ return tid + 1;},
+							dr: function(tid,w,h){ return tid + h + 1;}
+						};
+				}
 
 				function drawMove(tileID, x,y){
 					if(tileID === undefined && SomeTiles.debug){ console.warn("Tile ID needed for drawMove!"); console.trace(); return; }
@@ -933,6 +1014,10 @@
 
 				Piece.prototype.getTileInfo = function(){
 					return SomeTiles.Boards[0].tileSet[this.tileID];
+				}
+
+				Piece.prototype.getMechanic = function(){
+					return this.getTypeRules().capture.mechanic;
 				}
 
 				Piece.prototype.getMoves = function(){
@@ -1391,14 +1476,7 @@
 				var mechMap = {
 					collide : function(p,t){ return (_.indexOf(thePlayer().allowedMoves,t ) >= 0); },
 					landOnTop : function(p,t){ return foo },//TODO: decide if is this redundant
-					leapfrog : function(p,t){ 
-						var res = false;
-						//1: check distance. dist(targID-p.tileID) must be 2
-						//2: enemy must exist right in front of you in this heading
-						if(getPathDistance(p,t) == 2){
-
-						}
-					}//TODO priority: for Checkers!
+					leapfrog : function(p,t){ return thePlayer().checkLeapfrog(p,t); }
 				}, res = false;
 
 				return mechMap[capMech](p, targID);
@@ -1431,6 +1509,11 @@
 
 				return typeMap[capType](targID);
 
+			}
+
+			function isEnemyPiece(tid){
+				var p = getPiece(tid)
+				return (p !== undefined && (p.playerNum != thePlayer().number));
 			}
 
 			// END  -- Capture Functions
