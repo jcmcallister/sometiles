@@ -687,13 +687,14 @@
 												case 'collide':
 													console.log("checking collide captures");
 													//only works for move length 1! :(
-														for(var pid =0;pid<paths.length;pid++){
-															if( isEnemyPiece(paths[pid]) ){
-																console.log("collision detected for TID. trigger & capture piece found on TID: " + paths[pid] );
-																this.captureMoves[paths[pid]]= paths[pid];
+														var loopPaths = paths;
+														for(var pid =0;pid<loopPaths.length;pid++){
+															if( isEnemyPiece(loopPaths[pid]) ){
+																console.log("collision detected for TID. trigger & capture piece found on TID: " + loopPaths[pid] );
+																this.captureMoves[loopPaths[pid]]= loopPaths[pid];
 															}else{
 																//if this is a special move being checked, remove all invalid special moves from path
-																paths.splice(paths[pid], 1);
+																paths.splice(pid, 1);
 																if(SomeTiles.debug){ console.log("getValidMovesMV: removing irrelevant special_move collide path!"); }
 																//for instance, we don't highlight a pawn's attack diagonal moves if there are no enemies in range
 																	//this might be a good idea for later OR a special version for the game's UI Legend (aka "how to play" blurb)
