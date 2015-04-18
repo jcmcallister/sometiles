@@ -491,6 +491,7 @@ Player.prototype.movePiece = function(p,destTile){
 Player.prototype.addPiece = function(tileID, pieceType){
 	var me= this;
 	me.Pieces.push(new Piece(me.number, tileID, pieceType));
+	me.Pieces[me.Pieces.length-1].assignDirections();
 }
 
 

@@ -19,6 +19,10 @@
 				this.otherPlayer = null
 			};
 
+			function logthis(msg){
+				if(SomeTiles.debug){ console.log(msg); }
+			}
+
 			function showDialog(msg){
 				var btn = '<br><button onclick="hideDialog();">OK!</button>';
 				$("#dialog").html(msg+btn).removeClass("hidden");
@@ -50,6 +54,7 @@
 									,distanceOptions: [1] //these are options the player could make use of, see the Knight piece below
 									,mustGoMax: false
 									,noclip: false //if noclip, the Piece floats through adjacent pieces from src to dest
+									,forwardOnly: true
 								}
 							],
 							capture: {
@@ -58,7 +63,8 @@
 								move: {
 									directions: "ur,ul,dl,dr",
 									distanceOptions: [2],
-									mustGoMax: true
+									mustGoMax: true,
+									forwardOnly: true
 								}
 							}
 							//TODO: any other data fields to be manipulated in gameplay for Circles go here!

@@ -91,6 +91,7 @@
 												}
 												if(pcMin <= tiles[tile].id && tiles[tile].id < pcMax){
 													SomeTiles.Players[pl].addPiece(tiles[tile].id,pcTypes[i]);
+													//getPiece(tiles[tile].id).assignDirections();
 													tidList.push(tiles[tile].id);
 												}
 											}

@@ -18,6 +18,7 @@ function Piece(pnum, tileID, type){
 	this.selected = false;
 	this.playerNum = pnum;
 	this.imgpath;
+	//this.directions;//added in certain cases
 
 	//TODO: put DB backend to this
 	if(getAllPieceTypes().indexOf(type) >= 0){
@@ -43,13 +44,47 @@ Piece.prototype.getTileInfo = function(){
 	return SomeTiles.Boards[0].tileSet[this.tileID];
 }
 
-Piece.prototype.getCapMechanic = function(){
-	return this.getTypeRules().capture.mechanic;
+Piece.prototype.setProp = function(prop,val){
+	if(prop !== undefined){
+		this[prop] = val;
+	}else{ logthis("can't set Piece prop of " + prop); }
 }
 
-Piece.prototype.getCapType = function(){
-	return this.getTypeRules().capture.type;
+Piece.prototype.getLegalDirections = function(){
+	//single vector moves only
+	var mv = this.getMoves()[0], dirs = mv.directions.split(","), fwdirs=[];
+
+	if( _.has(mv , "forwardOnly") && mv.forwardOnly == true){
+		//uses player number to determine the direction of "forward"
+		for(var i=0; i<dirs.length;i++){
+			if(this.playerNum == 0 && "ur,r,dr".indexOf(dirs[i]) ){
+				fwdirs.push(dirs[i]);
+			}else{ 
+				if(this.playerNum == 1 && "ul,l,dl".indexOf(dirs[i])){
+					fwdirs.push(dirs[i]);
+				}
+			}
+		}
+	}else{
+		//all dirs ok
+		//fwdirs = dirs;
+	}
+	return fwdirs;
 }
+
+Piece.prototype.assignDirections = function(){
+	//really not for use by multi-vector pieces right now
+	var legals = this.getLegalDirections().join();
+	if(legals.length != this.getAllDirections().length){
+		this.setProp("directions",legals.join());
+	}
+	
+}
+
+Piece.prototype.getAllDirections = function(i){
+	return i === undefined ? this.getMoves()[0].directions : this.getMoves()[i].directions;
+}
+
 
 Piece.prototype.getSpecialMove = function(){
 	return this.getTypeRules().capture.move;
@@ -59,17 +94,30 @@ Piece.prototype.getMoves = function(){
 	return this.getTypeRules().moveVectors;
 }
 
+
+Piece.prototype.setMoveProp = function(prop, val, i){
+	if(prop !== undefined){
+		if(i === undefined){
+			for(var j = 0; j<this.getTypeRules().moveVectors.length;j++){
+				this.getTypeRules().moveVectors[j][prop] = val;
+			}
+		}else{
+			this.getTypeRules().moveVectors[i][prop] = val;
+		}
+		
+	}
+}
+
 Piece.prototype.getTypeRules = function(){
 	return SomeTiles.PieceTypes.rules[this.type];
 }
 
-Piece.prototype.arrangeOnColor = function(color){
-	if(color === undefined){
-		var color = SomeTiles.boardColors[0];
-	}
+Piece.prototype.getCapMechanic = function(){
+	return this.getTypeRules().capture.mechanic;
+}
 
-	//foo
-
+Piece.prototype.getCapType = function(){
+	return this.getTypeRules().capture.type;
 }
 
 Piece.prototype.drawPiece = function(selected){
