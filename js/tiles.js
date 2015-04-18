@@ -158,15 +158,13 @@
 
 				//create Board (constructor makes Tile set)
 				//display Board
-					var myboard = new Board(10,10,72,72);
+				var myboard = new Board(10,10,72,72);
 
-					var p1 = new Player(0);
-					var p2 = new Player(1, "#b00", "#d33");
+				var p1 = new Player(0);
+				var p2 = new Player(1, "#b00", "#d33");
 					
 				//dynamically create the right amount of Player Pieces from Piece Type rules
-				//TODO: abstract this into a populateBoard method
-					myboard.populate();
-
+				myboard.populate();
 
 				//which Player goes first?
 				SomeTiles.turn = Math.round(Math.random());
@@ -175,17 +173,14 @@
 
 				showDialog("Player " + (SomeTiles.turn+1) + " goes first!");
 
-				//draw ALL pieces
-					//p1.drawPieces();
-
 				//add Mouse listener
-					//must be canvas with highest z-index on page
-					var topLayerCanvas = getTopLayerCanvas();
-					
-					var canvas = topLayerCanvas || document.getElementsByTagName("canvas")[0];
-					canvas.addEventListener("click", canvasClick, false);
+				//	must use canvas with highest z-index on page
+				var topLayerCanvas = getTopLayerCanvas();
+				
+				var canvas = topLayerCanvas || document.getElementsByTagName("canvas")[0];
+				canvas.addEventListener("click", canvasClick, false);
 
-				//switchTurn() call inside of movePiece(), should be in any action function that consumes or finishes a turn  
+				//switchTurn() called inside of movePiece(), should be in any action function that consumes or finishes a turn  
 				
 			}
 
