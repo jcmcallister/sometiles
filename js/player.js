@@ -172,7 +172,7 @@ Player.prototype.getValidMovesMV = function(p, moveset, playerStorage){
 	//for(var mi=0;mi<moves.length;mi++ ){
 		var mi = 0;//only get first step of vector
 		//START -- get valid destination tiles for the FIRST vector
-		mydirs = moves[mi].directions;
+		mydirs = _.has(p,"directions") ? p.directions : moves[mi].directions;
 		if(mydirs == "*"){
 			mydirs = "r,ur,up,ul,l,dl,d,dr";
 		}

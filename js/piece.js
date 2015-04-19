@@ -57,16 +57,16 @@ Piece.prototype.getLegalDirections = function(){
 	if( _.has(mv , "forwardOnly") && mv.forwardOnly == true){
 		//uses player number to determine the direction of "forward"
 		for(var i=0; i<dirs.length;i++){
-			if(this.playerNum == 0 && "ur,r,dr".indexOf(dirs[i]) ){
+			if(this.playerNum == 0 && ["ur","dr","r"].indexOf(dirs[i]) >=0 ){
 				fwdirs.push(dirs[i]);
 			}else{ 
-				if(this.playerNum == 1 && "ul,l,dl".indexOf(dirs[i])){
+				if(this.playerNum == 1 && ["ul","dl","l"].indexOf(dirs[i])>=0){
 					fwdirs.push(dirs[i]);
 				}
 			}
 		}
 	}else{
-		//all dirs ok
+		//all dirs are fair game
 		//fwdirs = dirs;
 	}
 	return fwdirs;
@@ -76,7 +76,7 @@ Piece.prototype.assignDirections = function(){
 	//really not for use by multi-vector pieces right now
 	var legals = this.getLegalDirections().join();
 	if(legals.length != this.getAllDirections().length){
-		this.setProp("directions",legals.join());
+		this.setProp("directions",legals);
 	}
 	
 }
