@@ -163,6 +163,13 @@
 			//our MAIN()
 			function onceLoaded(){
 
+				//TODO: basic UI
+				
+
+			}
+
+			function makeGame(){
+
 				//create Board (constructor makes Tile set)
 				//display Board
 					var myboard = new Board(10,10,72,72);
