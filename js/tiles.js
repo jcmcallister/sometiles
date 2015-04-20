@@ -141,6 +141,7 @@
 
 			// END  -- Piece Types 
 
+			//the active game state object in this client
 			var SomeTiles = { 
 					Boards: [],
 					Players: [],

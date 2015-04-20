@@ -224,7 +224,7 @@ Player.prototype.getValidMovesMV = function(p, moveset, playerStorage){
 									}else{
 										//if this is a special move being checked, remove all invalid special moves from path
 										paths.splice(0, 1);//always results in [] for a leapfrog, i think
-										if(SomeTiles.debug){ console.log("getValidMovesMV: removing irrelevant special_move leapfrog path!"); }
+										logthis("getValidMovesMV: removing irrelevant special_move leapfrog path!");
 										//for instance, we don't highlight a pawn's attack diagonal moves if there are no enemies in range
 											//this might be a good idea for later OR a special version for the game's UI Legend (aka "how to play" blurb)
 									}
@@ -234,7 +234,7 @@ Player.prototype.getValidMovesMV = function(p, moveset, playerStorage){
 								
 									var loopPaths = paths;
 									for(var pid =0;pid<loopPaths.length;pid++){
-										if(SomeTiles.debug){console.log("checking for collide captures between " + p.type + " at tile " + p.tileID + " and target tile " + loopPaths[pid]);}
+										logthis("checking for collide captures between " + p.type + " at tile " + p.tileID + " and target tile " + loopPaths[pid]);
 										
 
 										//TODO PRIORITY: fix bug with this re: all non-capture moves being removed. 
@@ -245,7 +245,7 @@ Player.prototype.getValidMovesMV = function(p, moveset, playerStorage){
 										}else{
 											//if this is a special move being checked, remove all invalid special moves from path
 											paths = _.without(_.flatten(paths), loopPaths[pid]);
-											if(SomeTiles.debug){ console.log("getValidMovesMV: removing irrelevant special_move collide path!"); }
+											logthis("getValidMovesMV: removing irrelevant special_move collide path!");
 											//for instance, we don't highlight a pawn's attack diagonal moves if there are no enemies in range
 												//this might be a good idea for later OR a special version for the game's UI Legend (aka "how to play" blurb)
 										}
@@ -292,11 +292,11 @@ Player.prototype.getValidMovesMV = function(p, moveset, playerStorage){
 						var optionIndex = _.indexOf(moves[mi].distanceOptions,parseInt(spl[1]));
 
 						var mvLen = nextMove.distanceOptions[optionIndex];
-						if(SomeTiles.debug){ console.log("\tjust went " + spl[0] + " for "+ spl[1] +", now going " + nextDir + " for " + mvLen); }
+						logthis("\tjust went " + spl[0] + " for "+ spl[1] +", now going " + nextDir + " for " + mvLen);
 						for(var goo=0;goo<waypoints[keys[k]].length;goo++){
 							
 							var okPath = this.validateMovePath(nextMove, waypoints[keys[k]][goo], mvLen, nextDir);
-							if(SomeTiles.debug){ console.log("\tis " + dirs[l] + "," + mvLen + " a goodTile? : " + (okPath !== undefined ? okPath.toString() : "nope, undefined")); }
+							logthis("\tis " + dirs[l] + "," + mvLen + " a goodTile? : " + (okPath !== undefined ? okPath.toString() : "nope, undefined"));
 							if(okPath !== undefined && okPath.length > 0){
 								goodTiles = _.union(goodTiles, okPath );
 							}
@@ -410,6 +410,11 @@ Player.prototype.capturePiece = function(p,destTile,cap){
 	}
 	console.log("piece " + p.id + " just captured the piece at " + destTile.id + "!!!");
 	
+	if(_.has(SomeTiles,"mp") && SomeTiles.mp == true){
+		//TODO priority SERVER: push to socket to check if move is valid with your friend. 
+			//just like playing against a friend and the friend calls out any wrong moves
+	}
+
 	//remove the piece at destTile.id
 	var victim = this.removePiece(destTile.id);
 
@@ -436,7 +441,7 @@ Player.prototype.goalCheck = function(){
 				res = (g.zeroEnemies == true && theEnemy().Pieces.length == 0);
 				break;
 			default:
-				if(SomeTiles.debug){ console.log("goalCheck: unknown goal condition " + keys[i]); }
+				logthis("goalCheck: unknown goal condition " + keys[i]);
 				break;
 		}
 	}
