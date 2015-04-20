@@ -1,17 +1,42 @@
-//dbsetup
+//dbsetup for SequelizeJS & MySQL
 
-r = require('rethinkdb');
-r.connect({
+var Sequelize = require('sequelize');
+
+//connection setup. (we abbreviate 'connection'-> 'cx')
+var sequelize = new Sequelize('sometiles', 'root', 'password', {
 	host: 'localhost',
-	port: 17171
-}, function(err, conn){
-	if(err){ throw err; }
-	r.db('test').tableCreate('tv_shows').run(conn, function(err, res){
-		if(err){throw err;}
-		console.log(res);
-		r.table('tv_shows').insert({name: "hello world, ReQL"}).run(conn, function(err, res){
-			if(err){throw err;}
-			console.log(res);
-		});
+	dialect: 'mysql',
+
+	pool: {
+		max: 5,
+		min: 0,
+		idle: 10000
+	}
+
+});
+
+//alernatively
+//var s = Sequelize('postgres://user:pass@example.com:5432/dbname');
+
+//Demo Model, from Sequelize Tutorial
+var User = sequelize.define('user',{
+	firstname: {
+		type: Sequelize.STRING,
+		field: 'first_name' //user facing name is firstname, DB column first_name
+	},
+	lastname:{
+		type: Sequelize.STRING
+	}
+}, {
+	freezeTableName: true //Model tableName will be same as Model name
+});
+
+//sync creates any missing tables, based on the above Model def'n. If force:true, tables are dropped and re-created.
+User.sync({force: true}).then(function(){
+	//Table created
+	return User.create({
+		firstname: 'John',
+		lastname: 'Derp'
 	});
 });
+
