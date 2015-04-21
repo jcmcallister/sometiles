@@ -164,6 +164,9 @@
 			function onceLoaded(){
 
 				//TODO: basic UI
+
+				//on new game selection,
+					makeGame();
 				
 
 			}
