@@ -1,6 +1,10 @@
+@import url(http://fonts.googleapis.com/css?family=Press+Start+2P);
+
+body, button{ font-family: 'Press Start 2P', monospace; }
+
 .h2{ color:black; }
 canvas{ border:1px solid black; }
-body{  }
+
 #container{
 	margin-left:auto; margin-right:auto;
 	width:600px;/*def. width*/
@@ -25,3 +29,21 @@ canvas#pieces{ z-index:3; }
 	position:relative;
 	padding-top:20px;
 }
+
+button{ border:0; }
+
+ul#menu{ list-style: none; }
+
+ul#menu li{ margin-bottom: 10px; width:500px; }
+
+#menu button{
+	height:50px;
+	width:100%;
+	background-color:#369;
+	color:#eee;
+	border-radius:10px;
+	font-size: 24px;
+	padding:;
+}
+#menu button:hover{ background-color:#58A; }
+#randomtag{ color:#999; font-size:16px; }

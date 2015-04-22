@@ -20,7 +20,19 @@
 	<body onload="onceLoaded();">
 
 		<div id="container">
-			<div id="gameplay" >
+
+			<div id="ui">
+				<h2>SomeTiles</h2>
+				<p id="randomtag">A Game of Random Proportions</p>
+				<ul id="menu">
+					<li><button type="button" id="newgame">New Game</button></li>
+					<li><button type="button" id="joingame">Join Game</button></li>
+					<li><button type="button" id="myaccount">My Account</button></li>
+					<li><button type="button" id="recentgames">Recent Games</button></li>
+				</ul>
+			</div>
+
+			<div id="gameplay" class="hidden">
 				<h1>SomeTiles: Checkers Demo</h1>
 				<div id="layers">
 					<canvas id="board" width="500" height="500"></canvas>
@@ -32,14 +44,19 @@
 					</canvas>-->
 				</div>
 			</div>
-			<div id="dialog" class="hidden"></div><!-- TODO:  fix the jank!!! -->
-			
+			<div id="messaging" class="hidden">
+				<div id="dialog" class="hidden"></div><!-- TODO:  fix the jank!!! -->
+				
+				<!-- TODO: fix positioning of this! -->
+				<div id="playerScores">
+					<div class="p1">Player 1 score: <div id="p1score">0</div></div>
+					<div class="p2">Player 2 score: <div id="p2score">0</div></div>
+				</div>
+			</div>
+
 		</div>
 
-		<div id="playerScores">
-			<div class="p1">Player 1 score: <div id="p1score">0</div></div>
-			<div class="p2">Player 2 score: <div id="p2score">0</div></div>
-		</div>
+		
 
 	</body>
 

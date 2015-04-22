@@ -166,10 +166,42 @@
 				//TODO: basic UI
 
 				//on new game selection,
-					makeGame();
+					//makeGame();
 				
 
 			}
+
+			//on page load
+			$(function(){
+
+				//attach menu click handlers
+				$("#newgame").on("click", function(){
+					makeGame();
+					$("#messaging").removeClass("hidden");
+					$("#ui").slideUp(400, function(){
+						//TODO Priority: POLISH THE CSS SO ITS SEAMLESS
+						$("#gameplay").removeClass("hidden");
+					});
+				});
+
+				$("#joingame").on("click", function(){
+
+				});
+
+				$("#myaccount").on("click", function(){
+
+				});
+
+				$("#recentgames").on("click", function(){
+
+				});
+
+				onceLoaded();
+
+
+
+			});
+
 
 			function makeGame(){
 
