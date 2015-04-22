@@ -1,42 +1,24 @@
-//dbsetup for SequelizeJS & MySQL
+//Mongoose + iojs
 
-var Sequelize = require('sequelize');
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
 
-//connection setup. (we abbreviate 'connection'-> 'cx')
-var sequelize = new Sequelize('sometiles', 'root', 'password', {
-	host: 'localhost',
-	dialect: 'mysql',
+var gameSchema = new Schema({
+  title:  String,
+  author: String,
+  body:   String,
+  comments: [{ body: String, date: Date }],
+  date: { type: Date, default: Date.now },
+  hidden: Boolean,
+  meta: {
+    votes: Number,
+    favs:  Number
+  }
+});
 
-	pool: {
-		max: 5,
-		min: 0,
-		idle: 10000
-	}
+var pieceRuleSchema = new Schema({
 
 });
 
-//alernatively
-//var s = Sequelize('postgres://user:pass@example.com:5432/dbname');
-
-//Demo Model, from Sequelize Tutorial
-var User = sequelize.define('user',{
-	firstname: {
-		type: Sequelize.STRING,
-		field: 'first_name' //user facing name is firstname, DB column first_name
-	},
-	lastname:{
-		type: Sequelize.STRING
-	}
-}, {
-	freezeTableName: true //Model tableName will be same as Model name
-});
-
-//sync creates any missing tables, based on the above Model def'n. If force:true, tables are dropped and re-created.
-User.sync({force: true}).then(function(){
-	//Table created
-	return User.create({
-		firstname: 'John',
-		lastname: 'Derp'
-	});
-});
-
+//TODO priority: refer to tiles.js in client code as a base
+	//we'll cover checkers & chess in this DB for GameRuleSeeds
