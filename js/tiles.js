@@ -32,6 +32,12 @@
 				$("#dialog").addClass("hidden");
 			}
 
+			function getRandomTagline(){
+				var coolstuff = ["A Game of Random Proportions", "Stochastic & Fantastic", "Prepare for Random Fandom", "Incidentally Incredible", "Fortuitously Fun!", "Made for Adventitious Gamers", "Chance of Fun : Hit-or-miss", "Slapdash Haberdashery!"];
+				$("#randomtag").text( coolstuff[Math.floor(Math.random() * (coolstuff.length)) ] );
+
+			}
+
 			
 
 			//START -- Piece Types
@@ -174,13 +180,17 @@
 			//on page load
 			$(function(){
 
+
+				getRandomTagline();
+
 				//attach menu click handlers
 				$("#newgame").on("click", function(){
 					makeGame();
-					$("#messaging").removeClass("hidden");
+
 					$("#ui").slideUp(400, function(){
-						//TODO Priority: POLISH THE CSS SO ITS SEAMLESS
-						$("#gameplay").removeClass("hidden");
+						//TODO: any further polish to the anims (or reduction from 2 to 1 anim)
+						$("#messaging").removeClass("hidden");
+						$("#gameplay").fadeIn(400,function(){  });
 					});
 				});
 
