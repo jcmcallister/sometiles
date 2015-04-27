@@ -33,7 +33,7 @@
 			}
 
 			function getRandomTagline(){
-				var coolstuff = ["A Game of Random Proportions", "Stochastic & Fantastic", "Prepare for Random Fandom", "Incidentally Incredible", "Fortuitously Fun!", "Made for Adventitious Gamers", "Chance of Fun : Hit-or-miss", "Slapdash Haberdashery!"];
+				var coolstuff = ["A Game of Random Proportions", "Stochastic & Fantastic", "Prepare for Random Fandom", "Incidentally Incredible", "Fortuitously Fun!", "Made for Adventitious Gamers", "Chance of Fun : Hit-or-miss", "Slapdash Haberdashery!", "Tiled Tomfoolery", "Shenanigus Maximus", "Just the Funny Business"];
 				$("#randomtag").text( coolstuff[Math.floor(Math.random() * (coolstuff.length)) ] );
 
 			}
