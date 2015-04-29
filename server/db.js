@@ -31,6 +31,7 @@ var pieceRuleSchema = new Schema({
   actions_capture: [Schema.Types.ObjectID]
 });
 
+//TODO priority: Accounts Schema + Model + Document development for Mongoose / MongoDB crash course
 var accountSchema = new Schema({
   user: String,
   pass: String,
@@ -98,4 +99,21 @@ var c = new CheckersRuleSet({
   }
 
 
+});
+
+
+var Account = mongoose.model('Account', accountSchema);
+
+var testjeremy = new Account( {
+  user: 'jeremy',
+  pass: 'foobar',
+  recentGames: [],
+  savedGames: [],
+  friends: []
+} );
+
+testjeremy.save(function(err){
+  if(err){ return handleError(err); }
+  //account just got saved! woo!
+  console.log("Account with username \'" + this.name + "\' just got saved!");
 });
