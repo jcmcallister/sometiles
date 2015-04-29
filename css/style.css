@@ -56,3 +56,12 @@ ul#menu li{ margin-bottom: 10px; width:500px; }
 	 width:100%;
 
 }
+#modal{
+	margin-right: auto;
+	margin-left: auto;
+	width:100%;
+	text-align:center;
+	margin-top:50%;
+	font-size:22px;
+
+}

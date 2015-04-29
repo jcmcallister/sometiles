@@ -177,6 +177,14 @@
 
 			}
 
+			function showModalMessage(msg,location){
+				$('<div id="modal"></div>').text(msg).insertAfter(location);
+			}
+
+			function hideModalMessage(){
+				$("#modal").remove();
+			}
+
 			//on page load
 			$(function(){
 
@@ -185,12 +193,29 @@
 
 				//attach menu click handlers
 				$("#newgame").on("click", function(){
-					makeGame();
+					
 
 					$("#ui").slideUp(400, function(){
 						//TODO: any further polish to the anims (or reduction from 2 to 1 anim)
-						$("#messaging").removeClass("hidden");
-						$("#gameplay").fadeIn(400,function(){  });
+
+						//show loading
+						showModalMessage("Loading...","#gameplay");
+
+						//get net game rules
+						requestGame(function(){
+							//game rules received & processed
+							//parse them into SomeTiles object and then makeGame
+							makeGame();
+							
+							hideModalMessage();
+							//show the game!
+							$("#messaging").removeClass("hidden");
+							$("#gameplay").fadeIn(400,function(){  });
+						});
+
+
+						
+
 					});
 				});
 
