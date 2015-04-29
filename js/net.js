@@ -2,8 +2,9 @@
 
 //TODO: add AJAX functions to server, once server is set up
 function requestGame(cb){
-	//do stuff here
-	console.log("requesting game!");
+	
+	logthis("requesting game!");
+	//do AJAX stuff here to req the game: OPTION = use ExpressJS to pipe this over?
 	setTimeout( function(){
 		cb();
 	},2000 );
