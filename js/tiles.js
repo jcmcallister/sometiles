@@ -331,15 +331,21 @@
 			function canvasClick(e){
 				//get cursor position
 				var x, y, thePiece, b=getBoard(), usingOffset = false;
-				//var coords = getPosition(this, e), x=coords.x,y=coords.y;
+				//var coords = relMouseCoords(this, e);
 
 
 
-				/*if(e.offsetX != undefined && e.offsetY != undefined){
+				if(e.offsetX != undefined && e.offsetY != undefined){
+					//good for Chrome, IE9+
 					x = e.offsetX;
 					y = e.offsetY;
 					usingOffset = true;
-				}else*/ if(e.pageX  != undefined && e.pageY != undefined){
+				}else if(e.layerX != undefined && e.layerY != undefined){
+					//good in Firefox
+					x = e.layerX;
+					y = e.layerY;
+					usingOffset = true;
+				}else if(e.pageX  != undefined && e.pageY != undefined){
 					x = e.pageX;
 					y = e.pageY;
 				}else{
