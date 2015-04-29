@@ -291,14 +291,55 @@
 				$("#dialog").css("marginTop",h);
 			}
 
+			/* Huge thanks to Ryan Artecona for this, from http://stackoverflow.com/questions/55677/how-do-i-get-the-coordinates-of-a-mouse-click-on-a-canvas-element */
+			function relMouseCoords(event){
+			    var totalOffsetX = 0;
+			    var totalOffsetY = 0;
+			    var canvasX = 0;
+			    var canvasY = 0;
+			    var currentElement = this;
+
+			    do{
+			        totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
+			        totalOffsetY += currentElement.offsetTop - currentElement.scrollTop;
+			    }
+			    while(currentElement = currentElement.offsetParent)
+
+			    canvasX = event.pageX - totalOffsetX;
+			    canvasY = event.pageY - totalOffsetY;
+
+			    return {x:canvasX, y:canvasY}
+			}
+			HTMLCanvasElement.prototype.relMouseCoords = relMouseCoords;
+			// END -- Arcetona's function
+
+			//start-- some other func
+			function getPosition(canvas, event){
+			  var rx = event.x;
+			  var ry = event.y;
+
+			  var canvas = document.getElementById("canvas");
+
+			  rx -= canvas.offsetLeft;
+			  ry -= canvas.offsetTop;
+
+			  console.log("x:" + rx + " y:" + ry);
+			  return {x:rx, y:ry};
+			} 
+			//end -- other func
+
 			function canvasClick(e){
 				//get cursor position
 				var x, y, thePiece, b=getBoard(), usingOffset = false;
-				if(e.offsetX != undefined && e.offsetY != undefined){
+				//var coords = getPosition(this, e), x=coords.x,y=coords.y;
+
+
+
+				/*if(e.offsetX != undefined && e.offsetY != undefined){
 					x = e.offsetX;
 					y = e.offsetY;
 					usingOffset = true;
-				}else if(e.pageX  != undefined && e.pageY != undefined){
+				}else*/ if(e.pageX  != undefined && e.pageY != undefined){
 					x = e.pageX;
 					y = e.pageY;
 				}else{
