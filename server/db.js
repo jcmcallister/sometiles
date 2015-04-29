@@ -64,11 +64,11 @@ var coordinateSchema = new Schema({
 //TODO priority: refer to tiles.js in client code as a base
 	//we'll cover checkers & chess in this DB for GameRuleSeeds
 
-var CircleRuleSet = mongoose.model('CircleRuleSet',pieceRuleSchema);
+var CheckersRuleSet = mongoose.model('CheckersRuleSet',pieceRuleSchema);
 
 var CircleMove = mongoose.model('CircleMove',moveSchema);
 
-var c = new CircleRuleSet({
+var c = new CheckersRuleSet({
   pieceType: "circle",
   //imgpath: null,
   piecesPerPlayer: "fill",
