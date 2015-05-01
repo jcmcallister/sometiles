@@ -1,14 +1,10 @@
 //network stuff goes here
 function connectSocket(){
-	if(!SomeTiles.hasOwnProperty('rgg')){
-		SomeTiles['rgg'] = io.connect('http://localhost:3000/rgg');
-		logthis("rgg socket is up");
+	if(!SomeTiles.hasOwnProperty('sock')){
+		net = io('http://localhost/');
+		//SomeTiles['sock'] = io('http://localhost:3000/');
+		logthis("socket is up");
 	}
-
-	if(!SomeTiles.hasOwnProperty('account')){
-		SomeTiles['account'] = io.connect('http://localhost:3000/acct');
-		logthis("account socket is up");
-	}	
 }
 
 
@@ -18,9 +14,13 @@ function requestGame(cb){
 	connectSocket();
 	logthis("requesting game!");
 	//do AJAX stuff here to req the game: OPTION = use ExpressJS to pipe this over?
-	var s = SomeTiles.rgg;
-	s.on('connect',function(){
-		s.emit("request game", function(response){
+	net.on('connect',function(){
+
+		net.send("hello from a client!");//this is just like saying net.emit('message', 'foo')
+
+
+
+		net.on("message", function(response){
 			logthis("request game response: " + response);
 		});
 	});
