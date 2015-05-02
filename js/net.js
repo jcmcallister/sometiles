@@ -8,15 +8,13 @@ function connectSocket(){
 }
 
 
-//TODO: add AJAX functions to server, once server is set up
 function requestGame(cb){
-	
 	connectSocket();
 	logthis("requesting game!");
-	//do AJAX stuff here to req the game: OPTION = use ExpressJS to pipe this over?
+	
 	net.on('connect',function(){
 
-		net.send("hello from a client!");//this is just like saying net.emit('message', 'foo')
+		net.send("hello from a client!");//same as net.emit('message', 'hello...')
 
 		net.emit("request game", "foo");
 
@@ -25,22 +23,31 @@ function requestGame(cb){
 		});
 
 		net.on("request game",function(res){
-			logthis("request game response:\t" + res);
+			logthis("request game response:\t" + res.length);
+			applyGame(res);
+
+			cb();
 		});
 	});
 	
-	cb();
 }
 
-//TODO: parse Game Rules from JSON from server's Random Game Generator
-function applyGame(){
+//Parse Game Rules out of returned JSON from server's Random Game Generator
+function applyGame(obj){
+	var keys = Object.keys(obj);
+	logthis(keys.length + " obj keys to make game from: " + Object.keys(obj));
+
+	for(var i=0;i<keys.length;i++){
+		SomeTiles[keys[i]] = obj[keys[i]];
+	}
 
 }
 
-//TODO: add UI for loading screen
-function showLoading(){
+//TODO: 2 player MP
+function friendJoin(){
 
 }
 
-//TODO: add UI for main menu / nav
-function showMenu(){}
+function friendEvent(){
+
+}

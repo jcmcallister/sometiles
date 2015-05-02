@@ -38,133 +38,23 @@
 
 			}
 
-			
-
-			//START -- Piece Types
-
-				//define movement, actions, shape, etc for this piece type
-				//TODO: read all this info in from the server's RGG response data
-				var pcTypes = {
-					types: ["circle","square", "knight", "doge"],
-					rules:{
-						circle:{
-							piecesPerPlayer: "fill",
-							symmetricPlacement: false,
-							sameColorPlacement: true,//TODO priority: finish placement and checkers is up!
-							numEmptyRows: 1, //number of empty rows per side if you're doing a fill with sameColorPlacement
-							//startingPositions: [[0,0],[3,3], [0,7],[3,4]]//mirrored piece placement = numeric xy coords, random places on half board = -1
-							startingPositions: [[2,2], [3,5]]
-							,moveVectors:[
-								{
-									directions: "ur,ul,dl,dr"
-									,distanceOptions: [1] //these are options the player could make use of, see the Knight piece below
-									,mustGoMax: false
-									,noclip: false //if noclip, the Piece floats through adjacent pieces from src to dest
-									,forwardOnly: true
-								}
-							],
-							capture: {
-								mechanic: "leapfrog",
-								type: "special_move",
-								move: {
-									directions: "ur,ul,dl,dr",
-									distanceOptions: [2],
-									mustGoMax: true,
-									forwardOnly: true
-								}
-							}
-							//TODO: any other data fields to be manipulated in gameplay for Circles go here!
-						}
-						,square:{ //now a chess pawn
-							piecesPerPlayer: 0
-							,startingPositions: -1
-							,moveVectors:[
-								{
-									directions: "r"
-									,distanceOptions: [1]
-									,relDirections: true
-									,mirrorDirections: true
-									,mustGoMax: false
-									,noclip: false 
-								}
-							],
-							capture: {
-								mechanic: "collide",
-								type: "special_move"
-								,move: {
-									directions: "ur,dr",
-									distanceOptions: [1],
-									mustGoMax: true
-								}
-							} 
-							//TODO: will be read in from DB same as above, any other data fields here (UNIFORM with above PieceType rules)
-						}
-						,knight:{
-							imgpath: "img/knight.png",
-							piecesPerPlayer: 0
-							,startingPositions: -1
-							,moveVectors:[
-								{
-									directions: "r,up,l,d"
-									,distanceOptions: [1,2] //move options the player could choose, "up 1 over 2" versus "up 2 over 1"
-									,mustGoMax: true
-									,noclip: true //if noclip, the Piece floats through adjacent pieces from src to dest & the only collision check occurs at dest.
-									//if !noclip, the Piece must check if a Piece is blocking the path from currentTileID to destTileID
-								},
-								{
-									directions: "l,r"
-									,distanceOptions: [ 2,1 ] //the complement of the above distance vectors of the first move
-									,mustGoMax: true
-									,noclip:true
-								}
-							],
-							capture: {
-								mechanic: "collide",
-								type: "normal_move"
-							}
-						}
-						,doge:{
-							imgpath: "img/doge.png",
-							piecesPerPlayer: 0
-							,startingPositions: -1
-							,moveVectors:[
-								{
-									directions: "*"
-									,distanceOptions: [2] //these are options the player could make use of, see the Knight piece below
-									,mustGoMax: true
-									,noclip: false //if noclip, the Piece floats through adjacent pieces from src to dest
-								}
-							],
-							capture: {
-								mechanic: "leapfrog",
-								type: "normal_move"
-							}
-						}
-
-					}
-				};
-
-
-			// END  -- Piece Types 
 
 			//the active game state object in this client
 			var SomeTiles = { 
-					Boards: [],
-					Players: [],
-					debug: true
-					//,Game: theGame //TODO: add this once Game is done coming back from server
-					,PieceTypes: pcTypes
-					,c: {
-						board: "board",
-						pieces: "pieces",
-						moves: "moves"
-					}
-					,boardColors: ["#7c5236","#111"]
-					,turn : null
-					,GoalConditions: {
-						zeroEnemies: true
-					}
-				};
+				Boards: []
+				,Players: []
+				,debug: true
+				,PieceTypes: null//define movement, actions, shape, etc for this piece type
+				,c: {
+					board: "board",//canvas element IDs for each layer
+					pieces: "pieces",
+					moves: "moves"
+				}
+				,boardColors: ["#7c5236","#111"]
+				,turn : null
+				,GoalConditions: null
+				,animSpeed: 300
+			};
 
 			//our MAIN()
 			function onceLoaded(){
@@ -185,38 +75,61 @@
 				$("#modal").remove();
 			}
 
+			function showMenu(){
+				$("#messaging").addClass("hidden");
+				$("#gameplay").fadeOut(SomeTiles.animSpeed,function(){ 
+					$("#ui").slideDown(SomeTiles.animSpeed, function(){});
+				});
+			}
+
+			function resumeGame(){
+				$("#ui").slideUp(SomeTiles.animSpeed, function(){
+					//show the game!
+					$("#messaging").removeClass("hidden");
+					$("#gameplay").fadeIn(SomeTiles.animSpeed,function(){  });
+				});
+			}
+
+			function resetMenu(){
+				$("#messaging").text("");
+				$("#newgame").text("New Game");
+			}
+
 			//on page load
 			$(function(){
 
-
+				var gameInProgress = false;
 				getRandomTagline();
 
 				//attach menu click handlers
 				$("#newgame").on("click", function(){
-					
+					var ng = $(this);
 
-					$("#ui").slideUp(400, function(){
-						//TODO: any further polish to the anims (or reduction from 2 to 1 anim)
+					if(!gameInProgress){
+						//no game running, make one!
+						$("#ui").slideUp(SomeTiles.animSpeed, function(){
 
-						//show loading
-						showModalMessage("Loading...","#gameplay");
+							//show loading
+							showModalMessage("Loading...","#gameplay");
 
-						//get net game rules
-						requestGame(function(){
-							//game rules received & processed
-							//parse them into SomeTiles object and then makeGame
-							makeGame();
-							
-							hideModalMessage();
-							//show the game!
-							$("#messaging").removeClass("hidden");
-							$("#gameplay").fadeIn(400,function(){  });
+							//get net game rules
+							requestGame(function(){
+								//game rules received & parsed into SomeTiles master object
+								makeGame();
+								
+								hideModalMessage();
+								//show the game!
+								$("#messaging").removeClass("hidden");
+								$("#gameplay").fadeIn(SomeTiles.animSpeed,function(){
+									gameInProgress=true; 
+									ng.text('Resume Game');
+								});
+							});
+
 						});
-
-
-						
-
-					});
+					}else{
+						resumeGame();
+					}
 				});
 
 				$("#joingame").on("click", function(){
@@ -229,6 +142,13 @@
 
 				$("#recentgames").on("click", function(){
 
+				});
+
+				$(document).on('keydown',function(event){
+					if(event.which == 27 && gameInProgress){
+						showMenu();
+					}
+					//logthis("key " + event.which  + " pressed!");
 				});
 
 				onceLoaded();
@@ -451,13 +371,11 @@
 
 					showDialog("Player " + (player.number+1) + " WINS!");
 
+					resetMenu();
 					//TODO: do voting stuff
 				}
 
-				if(SomeTiles.debug){
-					console.log(movestr);
-				}
-
+				logthis(movestr);
 				
 			}
 
