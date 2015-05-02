@@ -18,10 +18,14 @@ function requestGame(cb){
 
 		net.send("hello from a client!");//this is just like saying net.emit('message', 'foo')
 
-
+		net.emit("request game", "foo");
 
 		net.on("message", function(response){
-			logthis("request game response: " + response);
+			logthis("server message response: " + response);
+		});
+
+		net.on("request game",function(res){
+			logthis("request game response:\t" + res);
 		});
 	});
 	

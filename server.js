@@ -5,6 +5,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
 var users = {};
+var portNum = 3000;
 
 //Base Web Server
 	//app.use(express.static(__dirname + '/js/'));
@@ -38,18 +39,28 @@ app.post('/', function(req, res){
 
 
 io.on('connection', function (socket) {
-	var addr = socket.handshake.address;
-	console.log("SOCKET\tUser Connected from " + addr.address + ":" + addr.port );
+	var hs = socket.handshake;
+	console.log("SOCKET\tUser Connected from " + hs.address + ":" + (hs.headers.host).substr(hs.headers.host.indexOf(":")+1) + ", socketid: " + socket.id);
+
+	//console.log("\t"+util.inspect(socket.handshake));
 
   socket.on('message', function (m) {
   	console.log("SOCKET\tMessage Recv:\t" + m); 
   	socket.emit('message','i got that thing you sent meh!');
   });
   socket.on('request game', function (m) {
-  	console.log("received message:" + m);
-  	socket.send("hello yourself!"); 
+  	console.log("SOCKET\tGame Request Recv:\t" + m);
+  	socket.send("hello yourself!");
+
+  	var json = 	{
+				game: {message:"hello world", taco: "foo"}
+				};
+
+  	socket.emit("request game", json);
   });
-  socket.on('disconnect', function () { });
+  socket.on('disconnect', function () {
+  	console.log("SOCKET\tUser Disconnect:\t" + socket.handshake.address + "\twith id: " + socket.id);
+  });
 });
 
 /*io.on('connection',function(socket){
@@ -83,6 +94,6 @@ io.on('connection', function (socket) {
 
 });*/
 
-http.listen(80, function(){
-  console.log('listening on *:80');
+http.listen(portNum, function(){
+  console.log('listening on *:' + portNum);
 });
