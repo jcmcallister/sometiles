@@ -1,8 +1,8 @@
-//network stuff goes here
+//Network Code for SomeTiles, by Jeremy McAllister (> ' . ' >)
 function connectSocket(){
 	if(!SomeTiles.hasOwnProperty('sock')){
-		net = io('http://localhost/');
-		//SomeTiles['sock'] = io('http://localhost:3000/');
+		//net = io('http://localhost/');
+		SomeTiles['sock'] = io('http://localhost/');
 		logthis("socket is up");
 	}
 }
@@ -12,11 +12,13 @@ function requestGame(cb){
 	connectSocket();
 	logthis("requesting game!");
 	
+	var net = SomeTiles.sock;
+
 	net.on('connect',function(){
 
-		net.send("hello from a client!");//same as net.emit('message', 'hello...')
+		//net.send("hello from a client!");//same as net.emit('message', 'hello...')
 
-		net.emit("request game", "foo");
+		net.emit("request game", "");
 
 		net.on("message", function(response){
 			logthis("server message response: " + response);

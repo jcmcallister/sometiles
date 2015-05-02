@@ -7,8 +7,7 @@
 		<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
 		<script src="js/underscore.js"></script>
 		<script src="js/backbone.js"></script>
-		<!--<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
-		<script src="http://cdnjs.cloudflare.com/ajax/libs/camanjs/4.0.0/caman.full.min.js"></script>-->
+
 		<script src="js/net.js"></script>
 		<script src="js/moves.js"></script>
 		<script src="js/player.js"></script>
@@ -39,15 +38,11 @@
 			</div>
 
 			<div id="gameplay" class="hidden">
-				<h1>SomeTiles: Checkers Demo</h1>
+				<h1>Checkers Demo</h1>
 				<div id="layers">
-					<canvas id="board" width="500" height="500"></canvas>
+					<canvas id="board" width="500" height="500">This application requires a browser that supports Canvas, like Chrome or Firefox.</canvas>
 					<canvas id="moves" width="500" height="500"></canvas>
 					<canvas id="pieces" width="500" height="500"></canvas>
-					<!-- OLD CANVAS BELOW-->
-					<!--<canvas id="drawhere" width="500" height="500">
-						<h3>This application requires a browser that supports Canvas, like Chrome or Firefox.</h3>
-					</canvas>-->
 				</div>
 			</div>
 			<div id="messaging" class="hidden">
@@ -55,8 +50,9 @@
 				
 				<!-- TODO: fix positioning of this! -->
 				<div id="playerScores">
-					<div class="p1">Player 1 score: <div id="p1score">0</div></div>
-					<div class="p2">Player 2 score: <div id="p2score">0</div></div>
+					<span class="lefty">SCORES -> </span>
+					<div class="p1">Player 1: <span id="p1score">0</span> // </div>
+					<div class="p2">Player 2: <span id="p2score">0</span></div>
 				</div>
 			</div>
 

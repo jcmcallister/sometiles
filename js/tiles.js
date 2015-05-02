@@ -50,7 +50,7 @@
 					pieces: "pieces",
 					moves: "moves"
 				}
-				,boardColors: ["#7c5236","#111"]
+				,boardColors: null
 				,turn : null
 				,GoalConditions: null
 				,animSpeed: 300
@@ -233,7 +233,6 @@
 					c[i].height = h;
 				}
 
-				$("#dialog").css("marginTop",h);
 			}
 
 			/* Huge thanks to Ryan Artecona for this, from http://stackoverflow.com/questions/55677/how-do-i-get-the-coordinates-of-a-mouse-click-on-a-canvas-element */
@@ -446,7 +445,7 @@
 				thePlayer().isTurn = false;
 				SomeTiles.turn = (Math.abs(SomeTiles.turn-1));
 				thePlayer().isTurn = true;
-				showDialog("Player " + (SomeTiles.turn+1) + "'s turn!");
+				//showDialog("Player " + (SomeTiles.turn+1) + "'s turn!");
 			}
 
 			function isTurnOf(pnum){

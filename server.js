@@ -3,6 +3,7 @@ var app = express();
 var util = require('util');
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+var clc = require('cli-color');
 //var mdb = require('./server/db.js');
 
 var users = {};
@@ -31,7 +32,7 @@ var portNum = 3000;
 
 	function serve(req,res){
 		var path = req.params[0] || req.route.path;
-		console.log("REQ\tGET\t" + path);
+		console.log(clc.yellow("HTTP\t") + "GET\t" + path);
 		res.sendFile(__dirname + path);
 	}
 
@@ -40,31 +41,53 @@ var portNum = 3000;
 
 io.on('connection', function (socket) {
 	var hs = socket.handshake;
-	console.log("SOCKET\tUser Connected from " + hs.address + ":" + (hs.headers.host).substr(hs.headers.host.indexOf(":")+1) + ", socketid: " + socket.id);
+	var remoteAddr = hs.address + ":" + (hs.headers.host).substr(hs.headers.host.indexOf(":")+1);
+	dashes();
+	console.log(clc.blue("SOCKET\t") + "User Connected from " + remoteAddr + "\tsocketid: " + socket.id);
 
 	//console.log("\t"+util.inspect(socket.handshake));
 
   socket.on('message', function (m) {
-  	console.log("SOCKET\tMessage Recv:\t" + m); 
+  	console.log(clc.blue("SOCKET\t") + "Message Recv:\t" + m); 
   	socket.emit('message','i got that thing you sent meh!');
   });
   socket.on('request game', function (m) {
-  	console.log("SOCKET\tGame Request Recv:\t" + m);
+  	var msg = m.length > 0 ? m : "(empty)";
+  	console.log(clc.blue("SOCKET\t") + "Game Request Recv:\t" + msg);
   	socket.send("hello yourself!");
 
 	var json = getRandomGame();
-	
-
   	socket.emit("request game", json);
+
+  	//put userIP:port -> socketID into users object
+  	users[socket.id] = remoteAddr;
+  	displayAllUsers();
   });
   socket.on('disconnect', function () {
-  	console.log("SOCKET\tUser Disconnect:\t" + socket.handshake.address + "\twith id: " + socket.id);
+  	console.log(clc.blue("SOCKET\t") + "User Disconnect:\t" + remoteAddr + "\tsocketid: " + socket.id);
+  	delete users[socket.id];
+  	displayAllUsers();
   });
 });
+
+function dashes(){
+	var str = "";
+	for(var i=0;i<80;i++){
+		str = str + "-";
+	}
+	console.log(str);
+}
+
+function displayAllUsers(){
+	dashes();
+	console.log(clc.green("USERS\t") + Object.keys(users).length + "\n" + util.inspect(users));
+	dashes();
+}
 
 function getRandomGame(){
 	//game gen code here
 	var res = {
+		boardColors: ["#7c5236","#111"],
 		GoalConditions: {
 			zeroEnemies: true
 		},
@@ -170,37 +193,6 @@ function getRandomGame(){
 
 	return res;
 }//END -- makeRandomGameJSON fn
-
-/*io.on('connection',function(socket){
-	console.log('a user connected!');
-	//probably really bad to expose the internal id here
-	socket.broadcast.emit("new conn","User Connected with id "+ socket.id);
-
-	socket.on('set name', function(n){
-		users[socket.id] = n;
-		io.emit('set name', users[socket.id]);
-		console.log("all users are " + util.inspect(users));
-		console.log("New user:" + users[socket.id]);
-		//console.log("socket data: " + util.inspect(socket));
-	});
-
-	socket.on('chat message', function(msg){
-		//console.log('message: ' + msg);
-		io.emit('chat message', users[socket.id] + ': ' + msg);
-	});
-
-	socket.on('disconnect', function(){
-	    console.log('user disconnected');
-	    delete users[socket.id];
-	});
-
-	socket.on('new game', function(){
-		console.log("new game requested!");
-		var json = {text: "yhelothar!"};
-		io.emit('new game', json);
-	});
-
-});*/
 
 http.listen(portNum, function(){
   console.log('listening on *:' + portNum);
