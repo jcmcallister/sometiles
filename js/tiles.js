@@ -146,7 +146,21 @@
 
 				$(document).on('keydown',function(event){
 					if(event.which == 27 && gameInProgress){
-						showMenu();
+						if($("#dialog:visible").length > 0){
+							hideDialog();
+						}else if(thePlayer().selectedPiece !== undefined){
+							thePlayer().deselectPiece(thePlayer().selectedPiece);
+						}else{
+							showMenu();
+						}
+					}
+					if(event.which == 13 && gameInProgress){
+						if($("#dialog:visible").length > 0)
+							hideDialog();
+					}
+					if(event.which == 32 && gameInProgress){
+						if($("#dialog:visible").length > 0)
+							hideDialog();
 					}
 					//logthis("key " + event.which  + " pressed!");
 				});

@@ -53,7 +53,7 @@ Player.prototype.deselectPiece = function(p){
 	this.selectedPiece = undefined;
 	//this.allowedMoves = [];
 	//this.captureMoves = {};
-	p.drawPiece(true);//redraw in same position
+	p.drawPiece(false);//redraw in same position
 
 	//CLEAR the valid moves away
 	clearMoves();
