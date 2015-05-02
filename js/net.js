@@ -1,7 +1,6 @@
 //Network Code for SomeTiles, by Jeremy McAllister (> ' . ' >)
 function connectSocket(){
 	if(!SomeTiles.hasOwnProperty('sock')){
-		//net = io('http://localhost/');
 		SomeTiles['sock'] = io('http://localhost/');
 		logthis("socket is up");
 	}

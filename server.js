@@ -45,29 +45,34 @@ io.on('connection', function (socket) {
 	dashes();
 	console.log(clc.blue("SOCKET\t") + "User Connected from " + remoteAddr + "\tsocketid: " + socket.id);
 
-	//console.log("\t"+util.inspect(socket.handshake));
+  	socket.on('message', function (m) {
+		console.log(clc.blue("SOCKET\t") + "Message Recv:\t" + m); 
+		socket.emit('message','i got that thing you sent meh!');
+	});
+	socket.on('request game', function (m) {
+	  	var msg = m.length > 0 ? m : "(empty)";
+	  	console.log(clc.blue("SOCKET\t") + "Game Request Recv:\t" + msg);
+	  	socket.send("hello yourself!");
 
-  socket.on('message', function (m) {
-  	console.log(clc.blue("SOCKET\t") + "Message Recv:\t" + m); 
-  	socket.emit('message','i got that thing you sent meh!');
-  });
-  socket.on('request game', function (m) {
-  	var msg = m.length > 0 ? m : "(empty)";
-  	console.log(clc.blue("SOCKET\t") + "Game Request Recv:\t" + msg);
-  	socket.send("hello yourself!");
+		var json = getRandomGame();
+	  	socket.emit("request game", json);
 
-	var json = getRandomGame();
-  	socket.emit("request game", json);
+	  	//put userIP:port -> socketID into users object
+	  	users[socket.id] = remoteAddr;
+	  	displayAllUsers();
+	});
 
-  	//put userIP:port -> socketID into users object
-  	users[socket.id] = remoteAddr;
-  	displayAllUsers();
-  });
-  socket.on('disconnect', function () {
-  	console.log(clc.blue("SOCKET\t") + "User Disconnect:\t" + remoteAddr + "\tsocketid: " + socket.id);
-  	delete users[socket.id];
-  	displayAllUsers();
-  });
+	socket.on('join game', function (ip){
+		//TODO priority: support for ONE friend to join my current room (named Socket ID)
+			//sub-TODO: take a look at how commands are issued and checked upon
+			//commands sent between players must be verified locally, then by the opponent
+	});
+
+	socket.on('disconnect', function () {
+	  	console.log(clc.blue("SOCKET\t") + "User Disconnect:\t" + remoteAddr + "\tsocketid: " + socket.id);
+	  	delete users[socket.id];
+	  	displayAllUsers();
+	});
 });
 
 function dashes(){
@@ -86,6 +91,8 @@ function displayAllUsers(){
 
 function getRandomGame(){
 	//game gen code here
+
+	//TODO priority: get Mongo/Mongoose setup to randomly populate these game rules
 	var res = {
 		boardColors: ["#7c5236","#111"],
 		GoalConditions: {

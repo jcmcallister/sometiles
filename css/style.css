@@ -77,8 +77,8 @@ ul#menu li{ margin-bottom: 10px; width:500px; }
 #playerScores{
 	z-index: 10;
 	position: fixed;
-	top: 5px;
-	left:0px;
+	top: 0px;
+	left: 0px;
 	color:black;
 	background-color:#F3F317;
 	padding:3px;
