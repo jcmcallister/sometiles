@@ -31,7 +31,13 @@
 				<p id="randomtag">A Game of Random Proportions</p>
 				<ul id="menu">
 					<li><button type="button" id="newgame">New Game</button></li>
-					<li><button type="button" id="joingame">Join Game</button></li>
+					<li><button type="button" id="joingame">Join Game</button>
+						<form id="joinform" action="" style="display:none;">
+							<input type="text" id="joinid" class="retro" autocomplete="off" placeholder="IPv4 Address of Game">
+							<button class="go" type="button">Go!</button>
+							<button class="x" type="button">X</button>
+						</form>
+					</li>
 					<li><button type="button" id="myaccount">My Account</button></li>
 					<li><button type="button" id="recentgames">Recent Games</button></li>
 				</ul>

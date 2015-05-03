@@ -53,7 +53,7 @@
 				,boardColors: null
 				,turn : null
 				,GoalConditions: null
-				,animSpeed: 300
+				,animSpeed: 250
 			};
 
 			//our MAIN()
@@ -67,8 +67,8 @@
 
 			}
 
-			function showModalMessage(msg,location){
-				$('<div id="modal"></div>').text(msg).insertAfter(location);
+			function showModalMessage(msg,location,styleclass){
+				$('<div id="modal"></div>').addClass(styleclass).text(msg).insertAfter(location);
 			}
 
 			function hideModalMessage(){
@@ -93,12 +93,15 @@
 			function resetMenu(){
 				$("#messaging").text("");
 				$("#newgame").text("New Game");
+				$("#joingame").text("Join Game");
 			}
 
 			//on page load
 			$(function(){
 
 				var gameInProgress = false;
+				var joinIP_OK = false;
+				var joinIP = null;
 				getRandomTagline();
 
 				//attach menu click handlers
@@ -110,7 +113,7 @@
 						$("#ui").slideUp(SomeTiles.animSpeed, function(){
 
 							//show loading
-							showModalMessage("Loading...","#gameplay");
+							showModalMessage("Loading...","#gameplay","halfdown");
 
 							//get net game rules
 							requestGame(function(){
@@ -134,6 +137,7 @@
 
 				$("#joingame").on("click", function(){
 
+					$("#joinform").slideDown(SomeTiles.animSpeed, function(){  });
 				});
 
 				$("#myaccount").on("click", function(){
@@ -142,6 +146,62 @@
 
 				$("#recentgames").on("click", function(){
 
+				});
+
+				$("#joinform button").on("click",function(){
+					var me = $(this);
+					if(me.hasClass("go")){
+						//run socket hit
+						if(!joinIP_OK){
+							hideModalMessage();
+							showModalMessage("Fix the IP address and try again.","#joinform","error");
+							return;
+						}
+
+						logthis("calling socket connect and joining room " + joinIP);
+						hideModalMessage();
+						showModalMessage("Joining Game at " + joinIP + "...","#joinform");
+						
+						mp_requestJoinGame(joinIP, function(){
+							//game rules received & parsed into SomeTiles master object
+
+							$("#ui").slideUp(SomeTiles.animSpeed, function(){
+								hideModalMessage();
+								showModalMessage("Loading...","#gameplay","halfdown");
+								makeGame();
+								$("#messaging").removeClass("hidden");
+								$("#gameplay").fadeIn(SomeTiles.animSpeed,function(){
+									gameInProgress=true; 
+									me.text('Resume Game');
+								});
+							});
+						});
+						
+					}else if(me.hasClass("x")){
+						//close joinform
+						hideModalMessage();
+						$("#joinform").slideUp(SomeTiles.animSpeed, function(){  });
+					}
+				});
+
+				$("#joinform").submit(function(){
+					$("#joinform button.go").trigger("click");
+					return false;
+				});
+
+				$("#joinid").on("keyup", function(){
+					var me = $(this);
+
+					//Big Thanks to Pyrocat101 @ https://gist.github.com/pyrocat101/7568655
+					var ipcheck =  /^(25[0-5]|2[0-4][0-9]|1?[0-9][0-9]{1,2})(\.(25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})){3}$/;
+					if(ipcheck.test(me.val())){
+						me.css("color","#0b0");
+						joinIP_OK = true;
+						joinIP = me.val();
+					}else{
+						me.css("color","#b00");
+						joinIP_OK = false;
+					}
 				});
 
 				$(document).on('keydown',function(event){

@@ -8,30 +8,38 @@ function connectSocket(){
 
 
 function requestGame(cb){
-	connectSocket();
-	logthis("requesting game!");
+	if(!SomeTiles.hasOwnProperty('sock')){
+		connectSocket();
+		logthis("socket not found @ New Game request, creating + connecting!");
+		var net = SomeTiles.sock;	
+
+		net.on('connect',function(){
+			getNewGame(net, cb);
+		});
+	}else{
+		getNewGame(SomeTiles.sock, cb);
+	}
 	
-	var net = SomeTiles.sock;
-
-	net.on('connect',function(){
-
-		//net.send("hello from a client!");//same as net.emit('message', 'hello...')
-
-		net.emit("request game", "");
-
-		net.on("message", function(response){
-			logthis("server message response: " + response);
-		});
-
-		net.on("request game",function(res){
-			logthis("request game response:\t" + res.length);
-			applyGame(res);
-
-			cb();
-		});
-	});
 	
 }
+function getNewGame(sock, cb){
+	logthis("connected to server!");
+	//net.send("hello from a client!");//same as net.emit('message', 'hello...')
+
+	sock.emit("request game", "");
+
+	sock.on("message", function(response){
+		logthis("server message response: " + response);
+	});
+
+	sock.on("request game",function(res){
+		logthis("request game response:\t" + res.length);
+		applyGame(res);
+
+		cb();
+	});
+}
+
 
 //Parse Game Rules out of returned JSON from server's Random Game Generator
 function applyGame(obj){
@@ -44,11 +52,43 @@ function applyGame(obj){
 
 }
 
-//TODO: 2 player MP
-function friendJoin(){
+//2 player MP
+function mp_requestJoinGame(ip,cb){
+	if(!SomeTiles.hasOwnProperty('sock')){
+		connectSocket();
+		logthis("socket not found @ Join Game request, creating + connecting!");
+		var net = SomeTiles.sock;
 
+		net.on('connect',function(){
+			mp_joinGame(net,ip,cb);
+			//cb();
+		});
+	}else{
+		mp_joinGame(SomeTiles.sock,ip,cb);
+	}
+	
+	
 }
 
-function friendEvent(){
+function mp_joinGame(sock, ip, cb){
+	sock.emit("join game", ip);
+
+	sock.on("game joined", function(res){
+		logthis("successfully joined game at IP " + ip);
+		hideModalMessage();
+		showModalMessage("Success!", "#joinform");
+		applyGame(res);
+		cb();
+	});
+
+	sock.on("join error",function(res){
+		logthis("error joining game!\n" + res);
+		hideModalMessage();
+		showModalMessage(res, "#joinform","error");
+		return;
+	})
+}
+
+function mp_sendEvent(){
 
 }

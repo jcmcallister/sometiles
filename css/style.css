@@ -1,6 +1,6 @@
 @import url(http://fonts.googleapis.com/css?family=Press+Start+2P);
 
-body, button{ font-family: 'Press Start 2P', monospace; }
+body, button, .retro{ font-family: 'Press Start 2P', monospace; }
 
 body{ margin-top:45px; }
 
@@ -69,10 +69,10 @@ ul#menu li{ margin-bottom: 10px; width:500px; }
 	margin-left: auto;
 	width:100%;
 	text-align:center;
-	margin-top:50%;
 	font-size:22px;
-
 }
+.halfdown{margin-top:50%;}
+.error{ color:#b00; }
 
 #playerScores{
 	z-index: 10;
@@ -89,4 +89,17 @@ ul#menu li{ margin-bottom: 10px; width:500px; }
 #playerScores div, #playerScores .lefty{
 	float:left;
 	margin-right:20px;
+}
+
+#joinform{
+	text-align: center;
+	padding-top:10px;
+	padding-bottom:10px;
+	border: 2px dashed #cdc;
+	border-top: none;
+}
+
+#joinform button, #joinform input{
+	width: auto !important;
+	height:35px;
 }
