@@ -523,7 +523,7 @@ Player.prototype.removePiece = function(tileID){
 
 Player.prototype.drawPieces = function(){
 	for(var i=0;i<this.Pieces.length;i++){
-		this.Pieces[i].drawPiece();
+		(this.Pieces[i]).drawPiece(false);
 	}
 }
 

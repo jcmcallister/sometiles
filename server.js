@@ -48,7 +48,12 @@ io.on('connection', function (socket) {
 
   	socket.on('message', function (m) {
 		msgSocket("Message Recv:\t" + m); 
-		socket.emit('message','i got that thing you sent meh!');
+		if(m == "ip req"){
+			msgSocket("SENT IP ADDR");
+			socket.emit('ip req', remoteAddr);
+		}else{
+			socket.emit('message','i got that thing you sent meh!');
+		}
 	});
 
 	socket.on('request game', function (m) {
@@ -64,6 +69,18 @@ io.on('connection', function (socket) {
 	  	displayAllUsers();
 	});
 
+	//multiplayer only!!! no hotseat coverage atm
+	socket.on('gamestate update', function (gs){
+		msgSocket("GS UPDATE REQUEST\t");
+
+		//TODO: server side fast validation or integrity checking
+
+		socket.broadcast.emit('gamestate update', gs);
+		msgLog("SENT GS UPDATE BROADCAST");
+
+
+	});
+
 	socket.on('join game', function (ip){
 		var roomToJoin = _.findKey(users, 'ip', ip);
 		msgUsers("JOIN GAME REQ:\t" + roomToJoin);
@@ -75,8 +92,16 @@ io.on('connection', function (socket) {
 			//displayAllUsers();
 			showRoomGuests('/');
 			//showRooms(socket);
-			msgSocket("SEND Game Rules (length=" + util.inspect(users[roomToJoin].rules).length + ")");
-			socket.emit("game joined", users[roomToJoin].rules);
+
+			//get first turn + Player Numbers
+			var firstmove = Math.round(Math.random());//0 or 1
+			var p1 = Math.round(Math.random()), p2 = Math.abs(p1-1);
+
+			socket.emit("game joined", {"ip":ip, "rules": users[roomToJoin].rules, "firstturn": firstmove, "myPlayerNum": p2});
+			msgSocket("SENT Game Info to Joining Player (length=" + util.inspect(users[roomToJoin].rules).length + "),\tPlayer " + (firstmove+1) + " goes first!");
+
+			socket.broadcast.emit("player joined", { 'ip': ip, 'firstturn': firstmove, "myPlayerNum": p1 })
+			msgSocket("SENT Join Notification to Player Host\tPlayer " + (firstmove+1) + " goes first!");
 		}else{
 			msgError("Room Not Found for IP\t" + ip);
 			//send error msg back to client

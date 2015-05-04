@@ -24,8 +24,9 @@
 			}
 
 			function showDialog(msg){
+				var oldText = $("#dialog:visible").text();
 				var btn = '<br><button onclick="hideDialog();">OK!</button>';
-				$("#dialog").html(msg+btn).removeClass("hidden");
+				$("#dialog").html(msg+oldText+btn).removeClass("hidden");
 			}
 
 			function hideDialog(){
@@ -54,6 +55,8 @@
 				,turn : null
 				,GoalConditions: null
 				,animSpeed: 250
+				,mode: "hotseat"
+				,myPlayerIndex: null
 			};
 
 			//our MAIN()
@@ -65,6 +68,22 @@
 					//makeGame();
 				
 
+			}
+
+			function controlsOn(){
+				//must be canvas with highest z-index on page
+				var topLayerCanvas = getTopLayerCanvas();
+					
+				var canvas = topLayerCanvas || document.getElementsByTagName("canvas")[0];
+				canvas.addEventListener("click", canvasClick, false);
+			}
+
+			function controlsOff(){
+				//must be canvas with highest z-index on page
+				var topLayerCanvas = getTopLayerCanvas();
+					
+				var canvas = topLayerCanvas || document.getElementsByTagName("canvas")[0];
+				canvas.removeEventListener("click", canvasClick, false);	
 			}
 
 			function showModalMessage(msg,location,styleclass){
@@ -126,6 +145,10 @@
 								$("#gameplay").fadeIn(SomeTiles.animSpeed,function(){
 									gameInProgress=true; 
 									ng.text('Resume Game');
+									mp_getIP(function(ip){
+										showDialog("Hi! Before you start...<br>One Friend can join game NOW with this IP address:<br>" + ip + "<br>");
+									});
+									
 								});
 							});
 
@@ -236,35 +259,43 @@
 
 				//create Board (constructor makes Tile set)
 				//display Board
-					var myboard = new Board(10,10,72,72);
+				var myboard = new Board(10,10,72,72);
 
-					var p1 = new Player(0);
-					var p2 = new Player(1, "#b00", "#d33");
+				var p1 = new Player(0);
+				var p2 = new Player(1, "#b00", "#d33");
 					
 				//dynamically create the right amount of Player Pieces from Piece Type rules
-				//TODO: abstract this into a populateBoard method
-					myboard.populate();
+				myboard.populate();
 
 
 				//which Player goes first?
-				SomeTiles.turn = Math.round(Math.random());
-				//set the first turn
-				SomeTiles.Players[SomeTiles.turn].isTurn = true;
-
-				showDialog("Player " + (SomeTiles.turn+1) + " goes first!");
+				if(SomeTiles.mode == "hotseat"){
+					setFirstTurn(Math.round(Math.random()));
+				}else{
+					setFirstTurn(SomeTiles.turn);
+				}
+				
 
 				//draw ALL pieces
 					//p1.drawPieces();
 
-				//add Mouse listener
-					//must be canvas with highest z-index on page
-					var topLayerCanvas = getTopLayerCanvas();
+				//add Mouse listeners
+				controlsOn();
 					
-					var canvas = topLayerCanvas || document.getElementsByTagName("canvas")[0];
-					canvas.addEventListener("click", canvasClick, false);
 
 				//switchTurn() call inside of movePiece(), should be in any action function that consumes or finishes a turn  
 				
+			}
+
+			function setFirstTurn(i){
+				//input: i must be 0 or 1, no excuses!
+				SomeTiles.turn = i;
+				//set the first turn
+				SomeTiles.Players[SomeTiles.turn].isTurn = true;
+
+				if(SomeTiles.mode == "hotseat"){
+					showDialog("Player " + (SomeTiles.turn+1) + " goes first!");
+				}
 			}
 
 			
@@ -351,8 +382,6 @@
 				var x, y, thePiece, b=getBoard(), usingOffset = false;
 				//var coords = relMouseCoords(this, e);
 
-
-
 				if(e.offsetX != undefined && e.offsetY != undefined){
 					//good for Chrome, IE9+
 					x = e.offsetX;
@@ -422,7 +451,9 @@
 								//move is legit, move the piece!
 								hideDialog();//hide error message if still visible
 								movestr = "moving piece from Tile id:" + player.selectedPiece.tileID + "\tto Tile id: " + theTile.id;
-								player.movePiece(player.selectedPiece,theTile);
+								player.movePiece(player.selectedPiece,theTile, function(){
+									mp_updateGameState();
+								});
 							}else{
 								//move is outside allowed move set! NO MOVE FOR YOU
 								movestr = "tile " + theTile.id + "\tis outside the allowed move set!";
@@ -515,11 +546,16 @@
 
 			function switchTurns(){
 
-				//hotseat local games only!
-				thePlayer().isTurn = false;
-				SomeTiles.turn = (Math.abs(SomeTiles.turn-1));
-				thePlayer().isTurn = true;
-				//showDialog("Player " + (SomeTiles.turn+1) + "'s turn!");
+				if(SomeTiles.mode == "mp"){
+					controlsOff();//switched back on upon enemy move @ net.js :: mp_updateGameState()
+					mp_updateGameState();
+				}else{
+					//hotseat local games only!
+					thePlayer().isTurn = false;
+					SomeTiles.turn = (Math.abs(SomeTiles.turn-1));
+					thePlayer().isTurn = true;
+					//showDialog("Player " + (SomeTiles.turn+1) + "'s turn!");
+				}
 			}
 
 			function isTurnOf(pnum){
