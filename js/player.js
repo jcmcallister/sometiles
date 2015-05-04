@@ -524,7 +524,7 @@ Player.prototype.removePiece = function(tileID){
 Player.prototype.drawPieces = function(){
 	var p;
 	for(var i=0;i<this.Pieces.length;i++){
-		p = this.Pieces[i];
+		p = this.Pieces[i];//TODO priority: bug here... p is not considered a Piece object, so i can't use it's fn's 
 		p.drawPiece(false);
 	}
 
