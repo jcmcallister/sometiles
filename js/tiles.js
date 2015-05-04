@@ -216,8 +216,9 @@
 					var me = $(this);
 
 					//Big Thanks to Pyrocat101 @ https://gist.github.com/pyrocat101/7568655
-					var ipcheck =  /^(25[0-5]|2[0-4][0-9]|1?[0-9][0-9]{1,2})(\.(25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})){3}$/;
-					if(ipcheck.test(me.val())){
+					var ipv4_check =  /^(25[0-5]|2[0-4][0-9]|1?[0-9][0-9]{1,2})(\.(25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})){3}$/,
+						ipv6_check = /^([0-9a-f]){1,4}(:([0-9a-f]){1,4}){7}$/i;
+					if(ipv4_check.test(me.val()) || ipv6_check.test( me.val() ) ){
 						me.css("color","#0b0");
 						joinIP_OK = true;
 						joinIP = me.val();

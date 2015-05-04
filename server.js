@@ -50,6 +50,7 @@ io.on('connection', function (socket) {
 		msgSocket("Message Recv:\t" + m); 
 		if(m == "ip req"){
 			msgSocket("SENT IP ADDR");
+			//msgLog(util.inspect(socket) );
 			socket.emit('ip req', remoteAddr);
 		}else{
 			socket.emit('message','i got that thing you sent meh!');

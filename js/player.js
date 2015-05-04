@@ -522,9 +522,18 @@ Player.prototype.removePiece = function(tileID){
 }
 
 Player.prototype.drawPieces = function(){
+	var p;
 	for(var i=0;i<this.Pieces.length;i++){
-		(this.Pieces[i]).drawPiece(false);
+		p = this.Pieces[i];
+		p.drawPiece(false);
 	}
+
+	/*
+	var p;
+	for(var i =0; i <getBoard().tileCount; i++){
+		p = getPiece(i);
+		p.drawPiece(false);//this is O(n^3) .... @.@
+	}*/
 }
 
 Player.prototype.updateScore = function(){
