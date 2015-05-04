@@ -8,6 +8,7 @@ var _ = require('lodash');
 //var mdb = require('./server/db.js');
 
 var users = {};
+var games = {};
 var portNum = 3000;
 
 //Base Web Server
@@ -28,7 +29,7 @@ var portNum = 3000;
 	app.post('/', function(req, res){
 		//console.log(util.inspect(req));
 		var json = {text: "yhelothar!"};
-	  res.sendFile(json);
+	  	res.sendFile(json);
 	});
 
 	function serve(req,res){
@@ -43,41 +44,45 @@ var portNum = 3000;
 io.on('connection', function (socket) {
 	var remoteAddr = getUserIP(socket);
 	dashes();
-	msgSocket("User Connected from " + remoteAddr + "\tsocketid: " + socket.id);
+	msgSocket("USER CONNECT\tAddress: " + remoteAddr + "\tSocket ID: " + socket.id);
 
   	socket.on('message', function (m) {
 		msgSocket("Message Recv:\t" + m); 
 		socket.emit('message','i got that thing you sent meh!');
 	});
+
 	socket.on('request game', function (m) {
 	  	var msg = m.length > 0 ? m : "(empty)";
-	  	msgSocket("Game Request Recv:\t" + msg);
-	  	socket.send("hello yourself!");
+	  	msgSocket("NEW GAME REQ:\t" + msg);
+	  	//socket.send("hello yourself!");
 
 		var json = getRandomGame();
 	  	socket.emit("request game", json);
 
-	  	//put userIP:port -> socketID into users object
-	  	users[socket.id] = {ip: remoteAddr,	game: json};
+	  	//put userIP -> socketID into users object
+	  	users[socket.id] = {ip: remoteAddr,	rules: json, state: null};
 	  	displayAllUsers();
 	});
 
 	socket.on('join game', function (ip){
 		var roomToJoin = _.findKey(users, 'ip', ip);
-		msgUsers("trying to join game room\t" + roomToJoin);
+		msgUsers("JOIN GAME REQ:\t" + roomToJoin);
 
 		if(roomToJoin != undefined ){
-			msgSocket("New User joining Room\t"+ roomToJoin);
+			//msgSocket("JOIN ROOM\t"+ roomToJoin);
 			socket.join(roomToJoin);
-			msgSocket("Room Joined!")
-			displayAllUsers();
-			msgSocket("Sending Game Code (length=" + util.inspect(users[roomToJoin].game).length + ")");
-			socket.emit("game joined", users[roomToJoin].game);
+			msgSocket(socket.id + "\t------ joined ----->\t" + roomToJoin);
+			//displayAllUsers();
+			showRoomGuests('/');
+			//showRooms(socket);
+			msgSocket("SEND Game Rules (length=" + util.inspect(users[roomToJoin].rules).length + ")");
+			socket.emit("game joined", users[roomToJoin].rules);
 		}else{
 			msgError("Room Not Found for IP\t" + ip);
 			//send error msg back to client
 			socket.emit("join error","Game Not Found");
-			msgSocket("Error Message sent");
+			msgSocket("Error Message Sent");
+			dashes();
 		}
 		//TODO priority: support for ONE friend to join my current room (named Socket ID)
 			//sub-TODO: take a look at how commands are issued and checked upon
@@ -85,9 +90,9 @@ io.on('connection', function (socket) {
 	});
 
 	socket.on('disconnect', function () {
-	  	msgSocket("User Disconnect:\t" + remoteAddr + "\tsocketid: " + socket.id);
+	  	msgSocket("USER DISCONNECT:\t" + remoteAddr + "\tSocket ID: " + socket.id);
 	  	delete users[socket.id];
-	  	displayAllUsers();
+	  	showRoomGuests('/');
 	});
 });
 
@@ -105,6 +110,15 @@ function displayAllUsers(){
 	dashes();
 }
 
+function showRooms(sock){
+	msgLog("Rooms Occupied by \t" + sock.id  + "\t" +Object.keys(sock.rooms).length + "\n" + util.inspect(sock.rooms));
+}
+
+function showRoomGuests(ns){
+	var nsp = io.of(ns);
+	msgLog("NAMESPACE \'" + ns + "\'\tPopln -> " + Object.keys(nsp.connected).length + "\n\tSocket Conns:\t" + Object.keys(nsp.connected));
+}
+
 function getUserIP(socket){
 	//var hs = socket.handshake;
 	//return hs.address + ":" + (hs.headers.host).substr(hs.headers.host.indexOf(":")+1);
@@ -115,7 +129,7 @@ function msgHTTP(msg){ console.log(clc.yellow("HTTP\t") + msg); }
 function msgSocket(msg){ console.log(clc.cyanBright("SOCKET\t") + msg); }
 function msgError(msg){ console.log(clc.redBright("ERROR\t") + msg); }
 function msgUsers(msg){ console.log(clc.green("USERS\t") + msg); }
-function msgLog(msg){ console.log(clc.cyan("USERS\t") + msg); }
+function msgLog(msg){ console.log(clc.cyan("APPLOG\t") + msg); }
 
 function getRandomGame(){
 	//game gen code here

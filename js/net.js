@@ -92,3 +92,23 @@ function mp_joinGame(sock, ip, cb){
 function mp_sendEvent(){
 
 }
+
+function mp_getGameState(){
+	var gs = {
+		turn: SomeTiles.turn,
+		Players: [
+			{
+				Pieces: SomeTiles.Players[0].Pieces,
+				scoreCount: SomeTiles.Players[0].scoreCount,
+				isTurn: SomeTiles.Players[0].isTurn
+			},
+			{
+				Pieces: SomeTiles.Players[1].Pieces,
+				scoreCount: SomeTiles.Players[1].scoreCount,
+				isTurn: SomeTiles.Players[1].isTurn
+			}
+		]
+	};
+
+	//logthis("game state: " + gs);
+}
