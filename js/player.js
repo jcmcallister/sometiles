@@ -448,7 +448,7 @@ Player.prototype.goalCheck = function(){
 	return res;
 }
 
-Player.prototype.movePiece = function(p,destTile){
+Player.prototype.movePiece = function(p,destTile,cb){
 
 	//check for potential blocks
 
@@ -489,6 +489,7 @@ Player.prototype.movePiece = function(p,destTile){
 		//if goal not met, keep going
 		//on successful Move, change player turn!
 		switchTurns();
+		cb();
 	}
 
 }

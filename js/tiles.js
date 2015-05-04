@@ -422,7 +422,9 @@
 								//move is legit, move the piece!
 								hideDialog();//hide error message if still visible
 								movestr = "moving piece from Tile id:" + player.selectedPiece.tileID + "\tto Tile id: " + theTile.id;
-								player.movePiece(player.selectedPiece,theTile);
+								player.movePiece(player.selectedPiece,theTile, function(){
+									
+								});
 							}else{
 								//move is outside allowed move set! NO MOVE FOR YOU
 								movestr = "tile " + theTile.id + "\tis outside the allowed move set!";

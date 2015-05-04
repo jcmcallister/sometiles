@@ -89,12 +89,14 @@ function mp_joinGame(sock, ip, cb){
 	})
 }
 
-function mp_sendEvent(){
+function mp_updateState(){
+	var gs = mp_getGameState();
 
+	
 }
 
 function mp_getGameState(){
-	var gs = {
+	return {
 		turn: SomeTiles.turn,
 		Players: [
 			{
