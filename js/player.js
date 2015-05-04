@@ -45,6 +45,7 @@ Player.prototype.selectPiece = function(p){
 	
 }
 
+
 Player.prototype.getAllMoves = function(){
 	return _.union(this.allowedMoves,this.specialMoves);
 }
@@ -410,7 +411,7 @@ Player.prototype.capturePiece = function(p,destTile,cap){
 	}
 	console.log("piece " + p.id + " just captured the piece at " + destTile.id + "!!!");
 	
-	if(_.has(SomeTiles,"mp") && SomeTiles.mp == true){
+	if(_.has(SomeTiles,"gamemode") && SomeTiles.gamemode == "mp"){
 		//TODO priority SERVER: push to socket to check if move is valid with your friend. 
 			//just like playing against a friend and the friend calls out any wrong moves
 	}
@@ -424,6 +425,7 @@ Player.prototype.capturePiece = function(p,destTile,cap){
 	
 	//update the scoreboard
 	pl.updateScore();
+	
 	//TODO: update of UI elements to show the HOARD
 
 	//showDialog("Player " + (SomeTiles.turn+1) + " just captured a " + victim.type + "!");
@@ -448,7 +450,7 @@ Player.prototype.goalCheck = function(){
 	return res;
 }
 
-Player.prototype.movePiece = function(p,destTile){
+Player.prototype.movePiece = function(p,destTile,cb){
 
 	//check for potential blocks
 
@@ -488,7 +490,12 @@ Player.prototype.movePiece = function(p,destTile){
 	}else{
 		//if goal not met, keep going
 		//on successful Move, change player turn!
-		switchTurns();
+		if(cb){
+			switchTurns(cb);
+		}else{
+			switchTurns();
+		}
+		//cb();
 	}
 
 }
@@ -522,18 +529,9 @@ Player.prototype.removePiece = function(tileID){
 }
 
 Player.prototype.drawPieces = function(){
-	var p;
 	for(var i=0;i<this.Pieces.length;i++){
-		p = this.Pieces[i];//TODO priority: bug here... p is not considered a Piece object, so i can't use it's fn's 
-		p.drawPiece(false);
+		this.Pieces[i].drawPiece(false);
 	}
-
-	/*
-	var p;
-	for(var i =0; i <getBoard().tileCount; i++){
-		p = getPiece(i);
-		p.drawPiece(false);//this is O(n^3) .... @.@
-	}*/
 }
 
 Player.prototype.updateScore = function(){

@@ -39,6 +39,8 @@
 
 			}
 
+			
+
 
 			//the active game state object in this client
 			var SomeTiles = { 
@@ -292,9 +294,16 @@
 
 			function setFirstTurn(i){
 				//input: i must be 0 or 1, no excuses!
+
+				//TODO priority BUGFIX: sometimes SomeTiles.turn and SomeTiles.myPlayerIndex are the same, but I can't move!!!
 				SomeTiles.turn = i;
 				//set the first turn
-				SomeTiles.Players[SomeTiles.turn].isTurn = true;
+				if(SomeTiles.myPlayerIndex == SomeTiles.turn){
+					SomeTiles.Players[SomeTiles.turn].isTurn = true;
+				}else{
+					SomeTiles.Players[SomeTiles.turn].isTurn = false;
+				}
+				
 
 				if(SomeTiles.mode == "hotseat"){
 					showDialog("Player " + (SomeTiles.turn+1) + " goes first!");
@@ -547,18 +556,19 @@
 			}
 
 
-			function switchTurns(){
+			function switchTurns(cb){
 
+				
+				//hotseat local games only!
+				thePlayer().isTurn = false;
+				SomeTiles.turn = (Math.abs(SomeTiles.turn-1));
+				thePlayer().isTurn = true;
+				//showDialog("Player " + (SomeTiles.turn+1) + "'s turn!");
 				if(SomeTiles.mode == "mp"){
 					controlsOff();//switched back on upon enemy move @ net.js :: mp_updateGameState()
-					mp_updateGameState();
-				}else{
-					//hotseat local games only!
-					thePlayer().isTurn = false;
-					SomeTiles.turn = (Math.abs(SomeTiles.turn-1));
-					thePlayer().isTurn = true;
-					//showDialog("Player " + (SomeTiles.turn+1) + "'s turn!");
+					cb();
 				}
+				
 			}
 
 			function isTurnOf(pnum){

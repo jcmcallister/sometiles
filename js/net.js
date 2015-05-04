@@ -85,12 +85,30 @@ function applyGSUpdate(gsupdate){
 			SomeTiles[currPath] = gsupdate[currPath];
 		}
 	}*/
+
 	if(_.has(gsupdate, "turn"))
 		SomeTiles["turn"] = gsupdate.turn;
 
+	var j =0;
 	for(var i =0; i < gsupdate.Players.length;i++){
-		if(_.has(gsupdate, ["Players",i,"Pieces"]))
-			SomeTiles.Players[i].Pieces = gsupdate.Players[i].Pieces;
+		if(_.has(gsupdate, ["Players",i,"Pieces"])){
+			for(j=0; j<gsupdate.Players[i].Pieces.length;j++){
+				if(_.findIndex(SomeTiles.Players[i].Pieces,function(p){
+					return p.tileID == gsupdate.Players[i].Pieces[j].tileID;
+				}) > -1){
+					SomeTiles.Players[i].Pieces[j].clearPiece();
+					SomeTiles.Players[i].Pieces[j] = _.cloneDeep( gsupdate.Players[i].Pieces[j] );
+					SomeTiles.Players[i].Pieces[j].__proto__ = Piece.prototype;
+					SomeTiles.Players[i].Pieces[j].drawPiece(false);
+				
+				}else{
+					//logthis("ERROR : ArrayIndex OOB in applyGSUpdate, length of " + SomeTiles.Players[i].Pieces.length + "\telem ref == " + j);
+					logthis("FOUND BAD GSUPDATE PIECE: " + j);
+				}
+			}
+		}
+
+		SomeTiles.Players[i].__proto__ = Player.prototype;
 
 		if(_.has(gsupdate, ["Players",i,"scoreCount"]))
 			SomeTiles.Players[i].scoreCount = gsupdate.Players[i].scoreCount;
@@ -101,7 +119,7 @@ function applyGSUpdate(gsupdate){
 
 		//now update the displays 
 		//redraw the pieces
-		SomeTiles.Players[i].drawPieces();
+		//SomeTiles.Players[i].drawPieces();
 		SomeTiles.Players[i].updateScore();
 	}
 
@@ -207,24 +225,23 @@ function mp_assignGSHandlers(sock){
 }
 
 function mp_getGameState(){
-	return {
-		turn: SomeTiles.turn,
-		Players: [
-			{
-				Pieces: SomeTiles.Players[0].Pieces,
-				scoreCount: SomeTiles.Players[0].scoreCount,
-				isTurn: SomeTiles.Players[0].isTurn
-			},
-			{
-				Pieces: SomeTiles.Players[1].Pieces,
-				scoreCount: SomeTiles.Players[1].scoreCount,
-				isTurn: SomeTiles.Players[1].isTurn
-			}
-		],
-		updatePaths: ["turn","Players[0].Pieces", "Players[0].scoreCount", "Players[0].isTurn", "Players[1].Pieces", "Players[1].scoreCount", "Players[1].isTurn" ]
+	var gs = {
+		turn: SomeTiles.turn
+		,Players: _.cloneDeep(SomeTiles.Players)
 	};
 
+	var j=0;
+	for(var i =0;i<gs.Players.length;i++){
+		gs.Players[i].__proto__ = Player.prototype;
+		gs.Players[i].Pieces = _.cloneDeep(SomeTiles.Players[i].Pieces);
+		/*for(j=0;j<SomeTiles.Players[i].Pieces.length;j++){
+			gs.Players[i].Pieces[j] = _.cloneDeep(SomeTiles.Players[i].Pieces[j]);
+			gs.Players[i].Pieces[j] = 
+		}*/
+	}
+		
 	//logthis("game state: " + gs);
+	return gs;
 }
 
 function mp_getIP(cb){
