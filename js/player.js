@@ -11,7 +11,6 @@ function Player(num, color, colorSelect){
 	this.allowedMoves = [];//a set of Tile IDs for moves allowed for selected pieces
 	this.captureMoves = {};//set of TIDs for moves that will result in a capture!
 
-	this.isTurn = false;
 	this.scoreCount = 0;
 
 	SomeTiles.Players.push(this);
@@ -22,7 +21,7 @@ Player.prototype.showLegend = function(){}
 
 Player.prototype.selectPiece = function(p){
 	//HOTSEAT: check turns!
-	if(isTurnOf(p.playerNum) == false){
+	if(SomeTiles.turn != p.playerNum ){
 		showDialog("It's not Player " + (p.playerNum+1) + "'s turn! Give Player " + (Math.abs(p.playerNum-1)+1) + " the controls!");
 		return;
 	}

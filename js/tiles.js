@@ -297,13 +297,6 @@
 
 				//TODO priority BUGFIX: sometimes SomeTiles.turn and SomeTiles.myPlayerIndex are the same, but I can't move!!!
 				SomeTiles.turn = i;
-				//set the first turn
-				if(SomeTiles.myPlayerIndex == SomeTiles.turn){
-					SomeTiles.Players[SomeTiles.turn].isTurn = true;
-				}else{
-					SomeTiles.Players[SomeTiles.turn].isTurn = false;
-				}
-				
 
 				if(SomeTiles.mode == "hotseat"){
 					showDialog("Player " + (SomeTiles.turn+1) + " goes first!");
@@ -560,19 +553,14 @@
 
 				
 				//hotseat local games only!
-				thePlayer().isTurn = false;
 				SomeTiles.turn = (Math.abs(SomeTiles.turn-1));
-				thePlayer().isTurn = true;
 				//showDialog("Player " + (SomeTiles.turn+1) + "'s turn!");
+
 				if(SomeTiles.mode == "mp"){
 					controlsOff();//switched back on upon enemy move @ net.js :: mp_updateGameState()
 					cb();
 				}
 				
-			}
-
-			function isTurnOf(pnum){
-				return SomeTiles.Players[pnum].isTurn;
 			}
 
 

@@ -113,10 +113,6 @@ function applyGSUpdate(gsupdate){
 		if(_.has(gsupdate, ["Players",i,"scoreCount"]))
 			SomeTiles.Players[i].scoreCount = gsupdate.Players[i].scoreCount;
 
-		if(_.has(gsupdate, ["Players",i,"isTurn"]))
-			SomeTiles.Players[i].isTurn = gsupdate.Players[i].isTurn;
-
-
 		//now update the displays 
 		//redraw the pieces
 		//SomeTiles.Players[i].drawPieces();

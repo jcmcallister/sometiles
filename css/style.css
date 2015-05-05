@@ -55,6 +55,11 @@ ul#menu li{ margin-bottom: 10px; width:500px; }
 }
 #menu button:hover{ background-color:#58A; }
 
+#menu button.notdone{
+	background-color:#6B6B6B;
+	color:#222;
+}
+
 #ui h2{ text-align: center; font-size:30px; }
 
 #randomtag{ color:#999; font-size:16px; text-align: center; }
