@@ -9,7 +9,9 @@ This is a JS client for my tile-based GAME of random rules and mechanics.
 A late-alpha Checkers demo is the default rule setting in the current build, for time-semester-crunch reasons. [Alas, no Kings & no double-jumping... yet.]
 Further, a base level of netcode room-joining is in place.
 
-There may still be gameplay interactions bugs between clients using Game State objects.
+Hot-seat and rough 2-player gameplay are supported now.
+
+There may still be gameplay interaction bugs between clients using Game State objects.
 
 
 ##Running a server
@@ -27,7 +29,7 @@ There may still be gameplay interactions bugs between clients using Game State o
 
 ##To Play
 
-Just fire it up and click "New Game" on the menu.
+Just fire it up, visit your server's page in a browser, and click "New Game" on the menu.
 
 The demo runs on IceWeasel, Chrome, and Firefox.
 
