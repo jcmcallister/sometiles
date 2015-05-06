@@ -15,31 +15,31 @@ There may still be gameplay interaction bugs between clients using Game State ob
 
 
 ##Running a server
- Install with 
-`npm i sometiles` wherever you download/extract to or pull the repo to.
+  
+ + Install with `npm i sometiles` wherever you download/extract to or pull the repo to.
 
- Alter the `connectSocket()` function at the top of `js/net.js` to go to the server host.
+ + Alter the `connectSocket()` function at the top of `js/net.js` to go to the server host.
 
- Fire it up with `nodejs server.js` or `iojs server.js`
+ + Fire it up with `nodejs server.js` or `iojs server.js`
 
 ###Defaults
- Port: 3000
- Client-side JS Debug Logs: ON
- (more to come)
+ + Port: 3000
+ + Client-side JS Debug Logs: ON
+ + (more to come)
 
 ##To Play
 
-Just fire it up, visit your server's page in a browser, and click "New Game" on the menu.
++ Just fire it up, visit your server's page in a browser, and click "New Game" on the menu.
 
-The demo runs on IceWeasel, Chrome, and Firefox.
+The demo runs on Iceweasel, Chrome, and Firefox.
 
 ###2-Player mode
- Have the host visit your server's webpage, and create a new game.
- Direct a friend to the server's webpage, click "Join Game", and enter the host's IP address (as shown on the host's screen after the New Game is created) and click "Go!".
- Play! 
- //*Report bugs as Issues if you find something, please...*
+ + Have the host visit your server's webpage, and create a new game.
+ + Direct a friend to the server's webpage, click "Join Game", and enter the host's IP address (as shown on the host's screen after the New Game is created) and click "Go!".
+ + Play! 
+ + //*Report bugs as Issues if you find something, please...*
 
 ##Future Work
-Fantastic stochastic mechanics like *D20 saving throws*, **swordplay**, environmental effects (e.g. trap tiles) and more! Gotta start with gameplay basics first though!
++ Fantastic stochastic mechanics like *D20 saving throws*, **swordplay**, environmental effects (e.g. trap tiles) and more! Gotta start with gameplay basics first though!
 
-More efficient Web Socketry to increase scalability.
++ More efficient Web Socketry to increase scalability.
