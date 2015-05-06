@@ -21,11 +21,10 @@ Player.prototype.showLegend = function(){}
 
 Player.prototype.selectPiece = function(p){
 	//HOTSEAT: check turns!
-	if(SomeTiles.turn != p.playerNum ){
+	if(SomeTiles.turn != p.playerNum || (SomeTiles.mode == "mp" && SomeTiles.turn != SomeTiles.myPlayerIndex)){
 		showDialog("It's not Player " + (p.playerNum+1) + "'s turn! Give Player " + (Math.abs(p.playerNum-1)+1) + " the controls!");
 		return;
 	}
-
 
 
 	this.selectedPiece = p;
@@ -410,13 +409,14 @@ Player.prototype.capturePiece = function(p,destTile,cap){
 	}
 	console.log("piece " + p.id + " just captured the piece at " + destTile.id + "!!!");
 	
-	if(_.has(SomeTiles,"gamemode") && SomeTiles.gamemode == "mp"){
-		//TODO priority SERVER: push to socket to check if move is valid with your friend. 
-			//just like playing against a friend and the friend calls out any wrong moves
-	}
-
 	//remove the piece at destTile.id
 	var victim = this.removePiece(destTile.id);
+
+	if(_.has(SomeTiles,"mode") && SomeTiles.mode == "mp"){
+		//declare what you just did, i.e. in-person board game and you declare an intention
+		//SomeTiles.moveHistory[p.id] = { "action" : "move", "dest" : p.tileID };
+		SomeTiles.moveHistory[victim.tileID] = {"action" : "capture"};
+	}
 
 	//add to count
 	var pl = thePlayer();
@@ -462,6 +462,11 @@ Player.prototype.movePiece = function(p,destTile,cb){
 		this.tryCapture(p,destTile);//for leapfrogs or other special cases
 	}
 	
+
+	if(_.has(SomeTiles,"mode") && SomeTiles.mode == "mp"){
+		//declare what you just did, i.e. in-person board game and you declare an intention
+		SomeTiles.moveHistory[p.tileID] = { "action" : "move", "src" : p.tileID, "dest" : destTile.id };
+	}
 
 	//move the given Piece p to the given destination Tile 
 	

@@ -24,7 +24,7 @@
 			}
 
 			function showDialog(msg){
-				var oldText = $("#dialog:visible").text();
+				var oldText = "<p class=\"faded\">" + $("#dialog:visible").text() + "</p>";
 				var btn = '<br><button onclick="hideDialog();">OK!</button>';
 				$("#dialog").html(msg+oldText+btn).removeClass("hidden");
 			}
@@ -59,6 +59,7 @@
 				,animSpeed: 250
 				,mode: "hotseat"
 				,myPlayerIndex: null
+				,moveHistory: {}
 			};
 
 			//our MAIN()
@@ -217,9 +218,11 @@
 				$("#joinid").on("keyup", function(){
 					var me = $(this);
 
-					//Big Thanks to Pyrocat101 @ https://gist.github.com/pyrocat101/7568655
+					//ipv4: Big Thanks to Pyrocat101 @ https://gist.github.com/pyrocat101/7568655
+					//IPv6: jteeuwen @ http://regexlib.com/REDetails.aspx?regexp_id=2690
 					var ipv4_check =  /^(25[0-5]|2[0-4][0-9]|1?[0-9][0-9]{1,2})(\.(25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})){3}$/,
-						ipv6_check = /^([0-9a-f]){1,4}(:([0-9a-f]){1,4}){7}$/i,
+						//ipv6_check = /^([0-9a-f]){1,4}(:([0-9a-f]){1,4}){7}$/i,
+						ipv6_check = /(::|(([a-fA-F0-9]{1,4}):){7}(([a-fA-F0-9]{1,4}))|(:(:([a-fA-F0-9]{1,4})){1,6})|((([a-fA-F0-9]{1,4}):){1,6}:)|((([a-fA-F0-9]{1,4}):)(:([a-fA-F0-9]{1,4})){1,6})|((([a-fA-F0-9]{1,4}):){2}(:([a-fA-F0-9]{1,4})){1,5})|((([a-fA-F0-9]{1,4}):){3}(:([a-fA-F0-9]{1,4})){1,4})|((([a-fA-F0-9]{1,4}):){4}(:([a-fA-F0-9]{1,4})){1,3})|((([a-fA-F0-9]{1,4}):){5}(:([a-fA-F0-9]{1,4})){1,2}))/,
 						specialCases = ["::1"];
 
 					if(ipv4_check.test(me.val()) || ipv6_check.test( me.val()) || _.indexOf(specialCases, me.val()) >= 0 ){
@@ -382,7 +385,9 @@
 			} 
 			//end -- other func
 
+
 			function canvasClick(e){
+
 				//get cursor position
 				var x, y, thePiece, b=getBoard(), usingOffset = false;
 				//var coords = relMouseCoords(this, e);
@@ -514,6 +519,22 @@
 					}
 				}
 				return pieces;
+			}
+
+
+			function findPiece(propName, propValue){
+				//select ONE Piece from all Players with Tile UUID tid
+				//used for pieces that may have moved in netcode
+				var players = SomeTiles.Players, p;
+				for(var pidx =0; pidx < players.length; pidx++){
+					for(var i = 0; i< players[pidx].Pieces.length;i++){
+						p = players[pidx].Pieces[i];
+						if(p.hasOwnProperty(propName) && p[propName] == propValue){
+							return p;
+						}
+					}
+				}
+				return;
 			}
 
 			function thePlayer(){

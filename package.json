@@ -3,9 +3,9 @@
   "version": "0.0.9",
   "description": "jcmcallister's senior project from Kean Univ. A GAME OF RANDOM PROPORTIONS!",
   "dependencies": {
+    "cli-color": "^1.0.0",
     "express": "^4.12.3",
-    "socket.io": "^1.3.5",
     "lodash": "^3.8.0",
-    "cli-color": "^1.0.0"
+    "socket.io": "^1.3.5"
   }
 }

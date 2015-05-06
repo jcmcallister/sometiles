@@ -92,7 +92,7 @@ function applyGSUpdate(gsupdate){
 	var j =0;
 	for(var i =0; i < gsupdate.Players.length;i++){
 		if(_.has(gsupdate, ["Players",i,"Pieces"])){
-			for(j=0; j<gsupdate.Players[i].Pieces.length;j++){
+			/*for(j=0; j<gsupdate.Players[i].Pieces.length;j++){
 				if(_.findIndex(SomeTiles.Players[i].Pieces,function(p){
 					return p.tileID == gsupdate.Players[i].Pieces[j].tileID;
 				}) > -1){
@@ -105,10 +105,10 @@ function applyGSUpdate(gsupdate){
 					//logthis("ERROR : ArrayIndex OOB in applyGSUpdate, length of " + SomeTiles.Players[i].Pieces.length + "\telem ref == " + j);
 					logthis("FOUND BAD GSUPDATE PIECE: " + j);
 				}
-			}
+			}*/
 		}
 
-		SomeTiles.Players[i].__proto__ = Player.prototype;
+		//SomeTiles.Players[i].__proto__ = Player.prototype;
 
 		if(_.has(gsupdate, ["Players",i,"scoreCount"]))
 			SomeTiles.Players[i].scoreCount = gsupdate.Players[i].scoreCount;
@@ -119,6 +119,30 @@ function applyGSUpdate(gsupdate){
 		SomeTiles.Players[i].updateScore();
 	}
 
+	//loop over gsupdate.moveHistory
+	if(_.has(gsupdate, "moveHistory")){
+		var p;
+		for(var pieceID in gsupdate.moveHistory){
+			logthis("moveHistory RECV// Piece " + pieceID + " is subject to a " + gsupdate.moveHistory[pieceID].action + "!");
+			//get the piece affected by the move
+			p = getPiece(pieceID);
+
+			if(p){
+				//update the current gamestate to match the moveHistory
+				switch(gsupdate.moveHistory[pieceID].action){
+					case 'move':
+						SomeTiles.Players[p.playerNum].addPiece( gsupdate.moveHistory[pieceID].dest, p.type );
+						SomeTiles.Players[p.playerNum].Pieces[SomeTiles.Players[p.playerNum].Pieces.length-1].drawPiece(false);
+						SomeTiles.Players[p.playerNum].removePiece(p.tileID);
+						break;
+
+					case 'capture':
+						SomeTiles.Players[p.playerNum].removePiece(p.tileID);
+						break;
+				}
+			}
+		}
+	}
 
 
 }
@@ -202,7 +226,7 @@ function mp_updateGameState(){
 
 	mp_assignGSHandlers(conn);
 	conn.emit("gamestate update", gs);
-	
+	mp_resetMoveHistory();
 }
 
 function mp_assignGSHandlers(sock){
@@ -210,6 +234,7 @@ function mp_assignGSHandlers(sock){
 		logthis("gamestate update success!\n" + res);
 		applyGSUpdate(res);
 		controlsOn();
+		mp_resetMoveHistory();
 	});
 
 	sock.on("gs error", function(res){
@@ -220,22 +245,29 @@ function mp_assignGSHandlers(sock){
 	});
 }
 
+function mp_resetMoveHistory(){
+	//logthis("moveHistory reset!");
+	SomeTiles.moveHistory = {};
+}
+
 function mp_getGameState(){
 	var gs = {
 		turn: SomeTiles.turn
 		,Players: _.cloneDeep(SomeTiles.Players)
+		,moveHistory: _.cloneDeep(SomeTiles.moveHistory)
 	};
 
-	var j=0;
+	/*var j=0;
 	for(var i =0;i<gs.Players.length;i++){
 		gs.Players[i].__proto__ = Player.prototype;
 		gs.Players[i].Pieces = _.cloneDeep(SomeTiles.Players[i].Pieces);
-		/*for(j=0;j<SomeTiles.Players[i].Pieces.length;j++){
-			gs.Players[i].Pieces[j] = _.cloneDeep(SomeTiles.Players[i].Pieces[j]);
-			gs.Players[i].Pieces[j] = 
-		}*/
+	}*/
+
+	//new gamestate piece coverage & actions
+	for(var pieceID in SomeTiles.moveHistory){
+		logthis("moveHistory SEND// Piece " + pieceID + " is doing a " + SomeTiles.moveHistory[pieceID].action + "!");
 	}
-		
+	
 	//logthis("game state: " + gs);
 	return gs;
 }

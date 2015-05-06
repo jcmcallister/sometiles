@@ -160,8 +160,74 @@ function msgLog(msg){ console.log(clc.cyan("APPLOG\t") + msg); }
 function getRandomGame(){
 	//game gen code here
 
+	var hasImage = Math.round(Math.random());
+	var imagePaths = ["img/doge.png"
+	 //,"img/knight.png"
+	 ];
+	var myImg = Math.round(Math.random()*imagePaths.length);
+
 	//TODO priority: get Mongo/Mongoose setup to randomly populate these game rules
-	var res = {
+	var res = getCheckers();
+
+	if(hasImage){
+		res.PieceTypes.rules.circle["imgpath"] = imagePaths[myImg];
+	}
+
+	return res;
+}//END -- makeRandomGameJSON fn
+
+http.listen(portNum, function(){
+  console.log('listening on *:' + portNum);
+});
+
+function getRules(){
+	//TODO
+}
+
+function getCheckers(){
+ return {
+		boardColors: ["#7c5236","#111"],
+		GoalConditions: {
+			zeroEnemies: true
+		},
+		PieceTypes: {
+			types: ["circle"],
+			rules:{
+				circle:{
+					piecesPerPlayer: "fill",
+					symmetricPlacement: false,
+					sameColorPlacement: true,
+					numEmptyRows: 1, //number of empty rows per side if you're doing a fill with sameColorPlacement
+					//startingPositions: [[0,0],[3,3], [0,7],[3,4]]//mirrored piece placement = numeric xy coords, random places on half board = -1
+					startingPositions: [[2,2], [3,5]]
+					,moveVectors:[
+						{
+							directions: "ur,ul,dl,dr"
+							,distanceOptions: [1] //these are options the player could make use of, see the Knight piece below
+							,mustGoMax: false
+							,noclip: false //if noclip, the Piece floats through adjacent pieces from src to dest
+							,forwardOnly: true
+						}
+					],
+					capture: {
+						mechanic: "leapfrog",
+						type: "special_move",
+						move: {
+							directions: "ur,ul,dl,dr",
+							distanceOptions: [2],
+							mustGoMax: true,
+							forwardOnly: true
+						}
+					}
+				}
+			}
+		}//end piece types
+
+	};//end HUGE JS object
+}
+
+function getPrelimDemo(){
+	return {
 		boardColors: ["#7c5236","#111"],
 		GoalConditions: {
 			zeroEnemies: true
@@ -265,10 +331,4 @@ function getRandomGame(){
 		}//end piece types WHEW
 
 	};//end HUGE JS object
-
-	return res;
-}//END -- makeRandomGameJSON fn
-
-http.listen(portNum, function(){
-  console.log('listening on *:' + portNum);
-});
+}
