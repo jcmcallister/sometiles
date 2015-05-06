@@ -18,9 +18,11 @@ There may still be gameplay interactions bugs between clients using Game State o
 
  Alter the `connectSocket()` function at the top of `js/net.js` to go to the server host.
 
+ Fire it up with `nodejs server.js` or `iojs server.js`
+
 ###Defaults
  Port: 3000
-
+ Client-side JS Debug Logs: ON
  (more to come)
 
 ##To Play
