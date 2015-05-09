@@ -18,9 +18,9 @@ There may still be gameplay interaction bugs between clients using Game State ob
   
  + Install with `npm i sometiles` wherever you download/extract to or pull the repo to.
 
- + Alter the `connectSocket()` function at the top of `js/net.js` to go to the server host.
-
  + Fire it up with `nodejs server.js` or `iojs server.js`
+
+ + OPTIONAL: (If using a custom route, alter the `connectSocket()` function at the top of `js/net.js` to go add in your route(s).)
 
 ###Defaults
  + Port: 3000
