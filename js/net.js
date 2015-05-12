@@ -225,8 +225,27 @@ function mp_updateGameState(){
 	var conn = SomeTiles.sock, gs = mp_getGameState();
 
 	mp_assignGSHandlers(conn);
+	mp_showWaiting();
 	conn.emit("gamestate update", gs);
 	mp_resetMoveHistory();
+}
+
+function mp_showWaiting(){
+	//todo: showDialog("waiting!")
+	showDialog("Waiting on opponent...");
+	//todo: an idle animation?
+}
+
+function mp_hideWaiting(){
+	hideDialog();
+}
+
+function mp_showTurnNotifier(){
+	//todo: an eye-catching notification when it's your turn!
+}
+
+function mp_hideTurnNotifier(){
+	//todo: turn off the notification!
 }
 
 function mp_assignGSHandlers(sock){

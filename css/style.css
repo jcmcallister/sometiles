@@ -17,6 +17,8 @@ canvas{ border:1px solid black; }
 }
 #layers{
 	position: relative;
+	border: 20px solid #369;
+	border-radius: 2em;
 }
 #layers canvas{
 	position:absolute;
@@ -28,8 +30,10 @@ canvas#moves{ z-index:2; }
 canvas#pieces{ z-index:3; }
 .hidden{ display:none; }
 #dialog{
-	position:relative;
-	margin: 50% auto 0% auto;
+	position:absolute;
+	top:12em;
+	left:2em;
+	width:100%;
 	z-index: 10;
 	color: white;
 	font-size: 24px;

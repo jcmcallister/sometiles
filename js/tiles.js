@@ -302,8 +302,16 @@
 				SomeTiles.turn = i;
 
 				if(SomeTiles.mode == "hotseat"){
-					showDialog("Player " + (SomeTiles.turn+1) + " goes first!");
+					showDialog("Player " + (SomeTiles.turn+1) + " goes first! Check the border to see whose turn it is!");
 				}
+
+				indicateTurn();
+
+			}
+
+			function indicateTurn(){
+				//switch the border color
+				$("#" + SomeTiles.c.pieces).parent().css("border-color", SomeTiles.Players[SomeTiles.turn].PieceColor);
 			}
 
 			
@@ -581,7 +589,9 @@
 					controlsOff();//switched back on upon enemy move @ net.js :: mp_updateGameState()
 					cb();
 				}
-				
+
+				indicateTurn();
+
 			}
 
 

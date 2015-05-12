@@ -240,7 +240,10 @@
 					}
 
 					//alter the CSS width of container
-					$("#"+SomeTiles.c.piece).parent().css("width",this.tileWidth * this.numTilesX);
+					$("#"+SomeTiles.c.pieces).parent().css({
+						"width" : this.tileWidth * this.numTilesX,
+						"height": this.tileHeight * this.numTilesY
+					});
 
 				}//end drawBoard fn
 

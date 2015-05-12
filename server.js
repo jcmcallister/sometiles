@@ -87,27 +87,37 @@ io.on('connection', function (socket) {
 		msgUsers("JOIN GAME REQ:\t" + roomToJoin);
 
 		if(roomToJoin != undefined ){
-			//msgSocket("JOIN ROOM\t"+ roomToJoin);
-			socket.join(roomToJoin);
-			msgSocket(socket.id + "\t------ joined ----->\t" + roomToJoin);
-			//displayAllUsers();
-			showRoomGuests('/');
-			//showRooms(socket);
 
-			//get first turn + Player Numbers
-			var firstmove = Math.round(Math.random());//0 or 1
-			var p1 = Math.round(Math.random()), p2 = Math.abs(p1-1);
+			if(getWhoCount('/') < 2){
 
-			socket.emit("game joined", {"ip":ip, "rules": users[roomToJoin].rules, "firstturn": firstmove, "myPlayerNum": p2});
-			msgSocket("SENT Game Info to Joining Player (length=" + util.inspect(users[roomToJoin].rules).length + "),\tPlayer " + (firstmove+1) + " goes first!");
+				//msgSocket("JOIN ROOM\t"+ roomToJoin);
+				socket.join(roomToJoin);
+				msgSocket(socket.id + "\t------ joined ----->\t" + roomToJoin);
+				//displayAllUsers();
+				showRoomGuests('/');
+				//showRooms(socket);
 
-			socket.broadcast.emit("player joined", { 'ip': ip, 'firstturn': firstmove, "myPlayerNum": p1 })
-			msgSocket("SENT Join Notification to Player Host\tPlayer " + (firstmove+1) + " goes first!");
+				//get first turn + Player Numbers
+				var firstmove = Math.round(Math.random());//0 or 1
+				var p1 = Math.round(Math.random()), p2 = Math.abs(p1-1);
+
+				socket.emit("game joined", {"ip":ip, "rules": users[roomToJoin].rules, "firstturn": firstmove, "myPlayerNum": p2});
+				msgSocket("SENT Game Info to Joining Player (length=" + util.inspect(users[roomToJoin].rules).length + "),\tPlayer " + (firstmove+1) + " goes first!");
+
+				socket.broadcast.emit("player joined", { 'ip': ip, 'firstturn': firstmove, "myPlayerNum": p1 })
+				msgSocket("SENT Join Notification to Player Host\tPlayer " + (firstmove+1) + " goes first!");
+			}else{
+				msgError("Room Full at IP \t" + ip);
+				//send error msg back to client
+				socket.emit("join error","Game is Full!");
+				msgSocket("Error Message Sent -- Full Room");
+				dashes();
+			}
 		}else{
 			msgError("Room Not Found for IP\t" + ip);
 			//send error msg back to client
 			socket.emit("join error","Game Not Found");
-			msgSocket("Error Message Sent");
+			msgSocket("Error Message Sent -- Room Not Found");
 			dashes();
 		}
 		//TODO priority: support for ONE friend to join my current room (named Socket ID)
@@ -138,6 +148,11 @@ function displayAllUsers(){
 
 function showRooms(sock){
 	msgLog("Rooms Occupied by \t" + sock.id  + "\t" +Object.keys(sock.rooms).length + "\n" + util.inspect(sock.rooms));
+}
+
+function getWhoCount(ns){
+	var s = io.of(ns);
+	return Object.keys(s.connected).length;
 }
 
 function showRoomGuests(ns){
