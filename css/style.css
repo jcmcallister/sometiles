@@ -39,7 +39,7 @@ canvas#pieces{ z-index:3; }
 	font-size: 24px;
 	padding:20px;
 	border: 3px dashed white;
-	background-color:#D33;
+	background-color:#369;
 }
 
 .faded{ color:#ccc; }

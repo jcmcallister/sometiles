@@ -302,7 +302,7 @@
 				SomeTiles.turn = i;
 
 				if(SomeTiles.mode == "hotseat"){
-					showDialog("Player " + (SomeTiles.turn+1) + " goes first! Check the border to see whose turn it is!");
+					showDialog('<span class="player' + (SomeTiles.turn+1) +'">Player ' + (SomeTiles.turn+1) + "</span> goes first! Check the border to see whose turn it is!");
 				}
 
 				indicateTurn();

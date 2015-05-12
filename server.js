@@ -88,7 +88,11 @@ io.on('connection', function (socket) {
 
 		if(roomToJoin != undefined ){
 
-			if(getWhoCount('/') < 2){
+			var roomCount = getWhoCount('/');
+			msgUsers("TRYING TO JOIN GAME WITH " + roomCount + " Users!");
+			var roomGuests = showRoomGuests('/');
+
+			if(roomCount == 2 && _.indexOf(roomGuests,socket.id) >= 0){
 
 				//msgSocket("JOIN ROOM\t"+ roomToJoin);
 				socket.join(roomToJoin);
@@ -158,6 +162,7 @@ function getWhoCount(ns){
 function showRoomGuests(ns){
 	var nsp = io.of(ns);
 	msgLog("NAMESPACE \'" + ns + "\'\tPopln -> " + Object.keys(nsp.connected).length + "\n\tSocket Conns:\t" + Object.keys(nsp.connected));
+	return Object.keys(nsp.connected);
 }
 
 function getUserIP(socket){
