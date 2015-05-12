@@ -302,16 +302,22 @@
 				SomeTiles.turn = i;
 
 				if(SomeTiles.mode == "hotseat"){
-					showDialog('<span class="player' + (SomeTiles.turn+1) +'">Player ' + (SomeTiles.turn+1) + "</span> goes first! Check the border to see whose turn it is!");
+					showDialog('<span id="player' + (SomeTiles.turn+1) +'">Player ' + (SomeTiles.turn+1) + "</span> goes first! Check the border to see whose turn it is!");
 				}
 
 				indicateTurn();
 
 			}
 
+			function showTextColors(){
+				$("#player1").css("color",SomeTiles.Players[0].PieceColor);
+				$("#player2").css("color",SomeTiles.Players[1].PieceColor);
+			}
+
 			function indicateTurn(){
 				//switch the border color
 				$("#" + SomeTiles.c.pieces).parent().css("border-color", SomeTiles.Players[SomeTiles.turn].PieceColor);
+				showTextColors();
 			}
 
 			

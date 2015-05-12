@@ -46,7 +46,7 @@ function getNewGame(sock, cb){
 		SomeTiles.mode = "mp";//changed from hotseat!
 		SomeTiles.myPlayerIndex = res.myPlayerNum;
 
-		var msg = "A Player Joined Your Game from " + res.ip + '!<br>You\'re <span class="player' + (SomeTiles.myPlayerIndex+1) + '">Player ' + (SomeTiles.myPlayerIndex+1) + '</span><br>';
+		var msg = "A Player Joined Your Game from " + res.ip + '!<br>You\'re <span id="player' + (SomeTiles.myPlayerIndex+1) + '">Player ' + (SomeTiles.myPlayerIndex+1) + '</span><br>';
 
 		//set first turn with res.firstturn
 		SomeTiles.turn = res.firstturn;
@@ -194,7 +194,7 @@ function mp_joinGame(sock, ip, cb){
 
 		mp_assignGSHandlers(sock);
 
-		var msg = "Welcome to the Game @ " + ip + '!<br>You\'re <span class="player' + (res.myPlayerNum+1) + '">Player ' + (res.myPlayerNum+1) + '</span><br>';
+		var msg = "Welcome to the Game @ " + ip + '!<br>You\'re <span id="player' + (res.myPlayerNum+1) + '">Player ' + (res.myPlayerNum+1) + '</span><br>';
 
 		SomeTiles.mode = "mp";
 		SomeTiles.myPlayerIndex = res.myPlayerNum;
