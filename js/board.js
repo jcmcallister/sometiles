@@ -153,7 +153,7 @@
 				}
 
 
-				//rotate Board
+				//rotate Board (that's numberwang!)
 				//jumble the Board
 
 				//the Board == Tile[]
