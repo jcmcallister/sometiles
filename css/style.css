@@ -29,7 +29,18 @@ canvas#board{ z-index:1; }
 canvas#moves{ z-index:2; }
 canvas#pieces{ z-index:3; }
 .hidden{ display:none; }
-
+#dialog{
+	position:absolute;
+	top:12em;
+	left:2em;
+	width:100%;
+	z-index: 10;
+	color: white;
+	font-size: 24px;
+	padding:20px;
+	border: 3px dashed white;
+	background-color:#369;
+}
 
 .faded{ color:#ccc; }
 
@@ -102,26 +113,4 @@ ul#menu li{ margin-bottom: 10px; width:500px; }
 #joinform button, #joinform input{
 	width: auto !important;
 	height:35px;
-}
-
-.dialog-container {
-	position:absolute;
-	opacity: 0;
-	top:12em;
-	left:2em;
-	width:100%;
-	z-index: 10;
-	padding:20px;
-	border: 3px dashed white;
-	/*background-color:#369;*/
-}
-#dialog{
-	position:relative;
-	width:100%;
-	margin: 0 auto;
-	background-color:#369;
-	color: white;
-	font-size: 24px;
-	/*padding:20px;
-	border: 3px dashed white;*/
 }
